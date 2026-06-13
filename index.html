@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TideHarvest — Washington State Shellfish & Fishing Alerts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1a12; --sand:#f5f0e8; --tide:#1e5c6e; --foam:#e8f4f7;
+  --kelp:#2d7a4f; --coral:#c85a3a; --mist:#8eaab3; --warn:#b87020;
+  --sp-sel:#2d7a4f; --loc-sel:#2d7a4f; --day-sel:#2d7a4f;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter','PingFang SC','Malgun Gothic','Hiragino Sans',sans-serif;
+     background:var(--sand);color:var(--ink);line-height:1.65;overflow-x:hidden}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--ink);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 2rem;height:56px;gap:1rem}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
+           color:var(--sand);text-decoration:none;letter-spacing:-.02em;flex-shrink:0}
+.nav-brand span{color:var(--mist)}
+.nav-center{display:flex;gap:1.5rem;align-items:center}
+.nav-center a{color:var(--mist);text-decoration:none;font-size:.83rem;
+              font-weight:500;transition:color .2s}
+.nav-center a:hover{color:var(--sand)}
+.nav-cta{background:var(--tide);color:#fff!important;padding:.38rem 1rem;
+         border-radius:4px;font-weight:600!important}
+.lang-switcher{display:flex;border:1px solid rgba(255,255,255,.2);
+               border-radius:5px;overflow:hidden;flex-shrink:0}
+.lang-btn{background:transparent;border:none;
+          border-right:1px solid rgba(255,255,255,.2);
+          color:var(--mist);font-size:.7rem;font-weight:600;
+          padding:.3rem .5rem;cursor:pointer;transition:all .15s;
+          font-family:'Syne',sans-serif;white-space:nowrap}
+.lang-btn:last-child{border-right:none}
+.lang-btn:hover{background:rgba(255,255,255,.1);color:var(--sand)}
+.lang-btn.active{background:var(--tide);color:#fff}
+
+/* HERO */
+.hero{background:var(--ink);color:var(--sand);padding:5rem 2rem 4rem;
+      text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 110%,rgba(30,92,110,.55) 0%,transparent 70%);
+  pointer-events:none}
+.hero-eyebrow{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:600;
+              letter-spacing:.18em;text-transform:uppercase;
+              color:var(--mist);margin-bottom:1.25rem}
+.hero h1{font-family:'Instrument Serif',serif;font-size:clamp(2.6rem,7vw,5rem);
+         line-height:1.06;letter-spacing:-.02em;margin-bottom:1rem}
+.hero h1 em{font-style:italic;color:var(--mist)}
+.hero-sub{max-width:560px;margin:0 auto 2rem;color:#a0b4bb;font-size:1rem;line-height:1.75}
+.hero-pills{display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem}
+.pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      border-radius:999px;padding:.4rem .9rem;font-size:.78rem;
+      color:#c8d8dc;display:flex;align-items:center;gap:.45rem}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot-open{background:var(--kelp)} .dot-warn{background:var(--warn)}
+
+/* SUBSCRIBE SECTION */
+.subscribe-section{background:var(--tide);padding:3rem 2rem;text-align:center}
+.sec-title{font-family:'Instrument Serif',serif;font-size:1.9rem;color:#fff;margin-bottom:.4rem}
+.sec-sub{color:#b0d8e4;font-size:.9rem;margin-bottom:2rem}
+.subscribe-form-card{background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);border-radius:12px;
+  padding:2rem;max-width:820px;margin:0 auto;text-align:left}
+.required-hint{font-size:.75rem;color:#ffd080;margin-bottom:1.25rem}
+
+/* FORM STEP */
+.form-step{margin-bottom:1.6rem}
+.step-label{display:flex;align-items:center;gap:.55rem;font-size:.88rem;
+            font-weight:700;color:#c8e8f0;margin-bottom:.7rem;
+            font-family:'Syne',sans-serif;letter-spacing:.04em}
+.step-num{display:none}
+.step-locked{opacity:.3;pointer-events:none;transition:opacity .3s}
+.step-locked.unlocked{opacity:1;pointer-events:auto}
+
+/* SPECIES CHIPS */
+.chip-grid{display:flex;flex-wrap:wrap;gap:.5rem}
+.sp-chip{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.44rem .88rem;border:2px solid rgba(255,255,255,.25);border-radius:999px;
+  cursor:pointer;font-size:.82rem;color:#d0e8f0;background:rgba(255,255,255,.06);
+  transition:background .15s,border-color .15s,color .15s,box-shadow .12s;
+  user-select:none;line-height:1}
+.sp-chip:hover:not(.sp-dis){border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.13)}
+.sp-chip.sp-sel{background:var(--sp-sel);border-color:var(--sp-sel);
+  color:#fff;font-weight:700;box-shadow:0 0 0 3px rgba(45,122,79,.4)}
+.sp-chip.sp-dis{opacity:.2;cursor:not-allowed;pointer-events:none}
+.sp-chip input{display:none}
+
+/* LOCATION CHIPS (multi-select, same style as species chips) */
+.loc-chip{display:inline-flex;align-items:center;gap:.35rem;
+  padding:.44rem .88rem;border:2px solid rgba(255,255,255,.25);border-radius:999px;
+  cursor:pointer;font-size:.82rem;color:#d0e8f0;background:rgba(255,255,255,.06);
+  transition:background .15s,border-color .15s,color .15s,box-shadow .12s;
+  user-select:none;line-height:1}
+.loc-chip:hover:not(.loc-dis){border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.13)}
+.loc-chip.loc-sel{background:var(--kelp);border-color:var(--kelp);
+  color:#fff;font-weight:700;box-shadow:0 0 0 3px rgba(45,122,79,.4)}
+.loc-chip.loc-dis{opacity:.2;cursor:not-allowed;pointer-events:none}
+
+/* LOCATION SELECT (dropdown — keep CSS but hide the wrap, using chips now) */
+.loc-select-wrap{display:none}
+.loc-select{width:100%;padding:.7rem 2.5rem .7rem .9rem;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);
+  border-radius:6px;color:#fff;font-size:.88rem;
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  font-family:'Inter','PingFang SC',sans-serif;transition:border-color .2s,background .2s}
+.loc-select:focus{border-color:rgba(255,255,255,.5);outline:none}
+.loc-select.selected{border-color:var(--kelp)!important;background:rgba(45,122,79,.25)!important;box-shadow:0 0 0 3px rgba(45,122,79,.3)}
+.loc-select option{background:#1e4a5a;color:#fff}
+.loc-select.invalid{border-color:var(--coral)!important}
+.loc-select-arrow{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);
+  pointer-events:none;color:var(--mist);font-size:.75rem}
+.loc-detail-box{margin-top:.75rem;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  padding:.85rem 1rem;font-size:.82rem;color:#d0e8f0;line-height:1.65;display:none}
+.loc-detail-box.show{display:block}
+.loc-detail-name{font-family:'Syne',sans-serif;font-weight:800;font-size:.88rem;
+  color:#fff;margin-bottom:.4rem}
+.loc-detail-sub{font-size:.74rem;color:var(--mist);margin-bottom:.55rem}
+.loc-species-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.55rem}
+.loc-sp-tag{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  border-radius:4px;padding:.18rem .5rem;font-size:.72rem;color:#c8e8f0;
+  font-family:'Syne',sans-serif;font-weight:600}
+.loc-warn-tag{background:rgba(200,90,58,.2);border:1px solid rgba(200,90,58,.4);
+  color:#ffb090;font-size:.72rem;border-radius:4px;padding:.18rem .5rem;
+  font-family:'Syne',sans-serif;font-weight:600}
+.loc-tide-note{font-size:.76rem;color:rgba(200,232,240,.75);margin-top:.45rem;line-height:1.55}
+
+/* LOCATION CHIPS - keep for legacy, hide */
+
+/* TIDE SELECT */
+.form-select{width:100%;padding:.62rem .9rem;
+  background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);
+  border-radius:6px;color:#fff;font-size:.88rem;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238eaab3' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .75rem center;
+  cursor:pointer;transition:border-color .2s,background .2s;
+  font-family:'Inter','PingFang SC',sans-serif}
+.form-select:focus{border-color:rgba(255,255,255,.5);outline:none}
+.form-select.selected{border-color:var(--kelp)!important;background-color:rgba(45,122,79,.25)!important;box-shadow:0 0 0 3px rgba(45,122,79,.3)}
+.form-select option{background:#1e4a5a;color:#fff}
+.form-select.invalid{border-color:var(--coral)!important}
+.tide-note{font-size:.73rem;color:rgba(200,232,240,.65);margin-top:.4rem;line-height:1.5}
+
+/* DAY CHIPS */
+.day-grid{display:flex;flex-wrap:wrap;gap:.5rem}
+.day-chip{display:inline-flex;align-items:center;justify-content:center;
+  min-width:58px;padding:.52rem .7rem;
+  border:2px solid rgba(255,255,255,.25);border-radius:8px;
+  cursor:pointer;font-size:.86rem;font-weight:700;
+  color:#d0e8f0;background:rgba(255,255,255,.06);
+  transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s;
+  user-select:none;font-family:'Syne',sans-serif}
+.day-chip:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.12)}
+.day-chip.day-sel{
+  background:var(--day-sel)!important;border-color:var(--day-sel)!important;
+  color:#fff!important;font-weight:800!important;
+  box-shadow:0 0 0 3px rgba(45,122,79,.4),0 3px 10px rgba(45,122,79,.3)!important;
+  transform:translateY(-2px)}
+.day-chip input{display:none}
+.day-hint{font-size:.72rem;color:rgba(200,232,240,.55);margin-top:.45rem;line-height:1.5}
+
+/* EMAIL */
+.email-row{display:flex;gap:.75rem;align-items:flex-end;margin-top:.2rem}
+.email-input{flex:1;padding:.65rem .9rem;background:rgba(255,255,255,.12);
+  border:2px solid rgba(255,255,255,.2);border-radius:6px;color:#fff;
+  font-size:.88rem;font-family:'Inter',sans-serif;transition:border-color .2s}
+.email-input::placeholder{color:rgba(255,255,255,.38)}
+.email-input:focus{border-color:rgba(255,255,255,.5);outline:none}
+.email-input.invalid{border-color:var(--coral)!important}
+.btn-submit{padding:.65rem 1.75rem;background:var(--sand);color:var(--tide);
+  border:none;border-radius:6px;font-family:'Syne',sans-serif;font-weight:800;
+  font-size:.88rem;cursor:pointer;white-space:nowrap;
+  transition:background .2s,transform .1s;height:44px;flex-shrink:0}
+.btn-submit:hover{background:#fff;transform:translateY(-1px)}
+
+/* ERRORS */
+.field-error{color:#ffb0a0;font-size:.73rem;margin-top:.35rem;display:none}
+.field-error.show{display:block}
+.form-note{color:rgba(200,232,240,.5);font-size:.73rem;margin-top:1rem}
+
+/* SECTIONS */
+.sw{max-width:1100px;margin:0 auto;padding:4rem 2rem}
+.slabel{font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;
+        letter-spacing:.2em;text-transform:uppercase;color:var(--tide);margin-bottom:.6rem}
+h2{font-family:'Instrument Serif',serif;font-size:clamp(1.7rem,4vw,2.6rem);
+   line-height:1.15;letter-spacing:-.01em;margin-bottom:.75rem}
+.sdesc{color:#666;font-size:.88rem;max-width:620px;margin-bottom:2rem}
+.sdesc a{color:var(--tide)}
+
+/* BEACH ACCORDION */
+.bgrid{display:flex;flex-direction:column;gap:.6rem;margin-top:1.5rem}
+.bcard{background:#fff;border-radius:10px;overflow:hidden;
+       border:1px solid #e0dcd2;transition:box-shadow .2s}
+.bcard:hover{box-shadow:0 4px 20px rgba(15,26,18,.08)}
+.bcard-toggle{width:100%;background:none;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.2rem;text-align:left;gap:.75rem;transition:background .15s}
+.bcard-toggle:hover{background:#faf7f2}
+.bcard-toggle-left{display:flex;align-items:center;gap:.85rem;flex:1;min-width:0}
+.bcard-toggle-icon{font-size:1.4rem;flex-shrink:0}
+.bcard-toggle-text{min-width:0}
+.bname{font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;line-height:1.3}
+.bloc{font-size:.73rem;color:var(--mist);margin-top:.18rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bcard-toggle-right{display:flex;align-items:center;gap:.6rem;flex-shrink:0}
+.bdg{padding:.26rem .6rem;border-radius:999px;font-size:.66rem;
+     font-weight:700;font-family:'Syne',sans-serif;letter-spacing:.04em}
+.bdg-s{background:#fff3e6;color:var(--warn)}
+.bdg-o{background:#e8f5ee;color:var(--kelp)}
+.bdg-c{background:#fceeed;color:var(--coral)}
+.bchevron{color:var(--mist);font-size:.8rem;transition:transform .25s;flex-shrink:0}
+.bcard.open .bchevron{transform:rotate(180deg)}
+.bcard-body{display:none;padding:0 1.2rem 1.2rem;border-top:1px solid #f0ece4}
+.bcard.open .bcard-body{display:block}
+.spdis{display:flex;flex-wrap:wrap;gap:.35rem;margin:1rem 0 .9rem}
+.spd{background:var(--foam);border:1px solid #c8dde4;color:var(--tide);
+     border-radius:4px;font-size:.7rem;font-weight:600;
+     padding:.18rem .5rem;font-family:'Syne',sans-serif}
+.ttip{background:var(--sand);border-radius:6px;padding:.7rem .8rem;
+      font-size:.8rem;margin-bottom:.8rem;line-height:1.6}
+.ttip strong{color:var(--tide)}
+.rlist{font-size:.8rem;color:#555;line-height:1.75;list-style:none}
+.rlist li{padding-left:1rem;position:relative;margin-bottom:.1rem}
+.rlist li::before{content:'›';position:absolute;left:0;color:var(--mist);font-weight:700}
+.sfoot{margin-top:.9rem;padding-top:.9rem;border-top:1px solid #eee;font-size:.79rem}
+.sopen{color:var(--kelp);font-weight:700}
+.snote{color:#888;font-size:.74rem;margin-top:.2rem;line-height:1.5}
+
+/* BEACH SPECIES PREVIEW PILLS (shown in collapsed state) */
+.bcard-sp-preview{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem}
+.bcard-sp-pill{font-size:.65rem;background:var(--foam);color:var(--tide);
+  border:1px solid #c8dde4;border-radius:3px;padding:.1rem .4rem;
+  font-family:'Syne',sans-serif;font-weight:600}
+
+/* HOW */
+.how-bg{background:var(--foam);border-radius:14px;padding:2.5rem 2rem}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+       gap:2rem;margin-top:2rem}
+.hstep{text-align:center}
+.hicon{width:50px;height:50px;background:var(--tide);border-radius:50%;
+       display:flex;align-items:center;justify-content:center;
+       margin:0 auto .7rem;font-size:1.3rem}
+.hstep h3{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;margin-bottom:.35rem}
+.hstep p{font-size:.82rem;color:#555;line-height:1.65}
+
+/* TABLE */
+.rtbl{width:100%;border-collapse:collapse;margin-top:1.75rem;font-size:.82rem}
+.rtbl th{text-align:left;padding:.7rem 1rem;background:var(--ink);color:var(--sand);
+         font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:.08em}
+.rtbl th:first-child{border-radius:8px 0 0 0}
+.rtbl th:last-child{border-radius:0 8px 0 0}
+.rtbl td{padding:.7rem 1rem;border-bottom:1px solid #e8e4da;vertical-align:top}
+.rtbl tr:last-child td{border-bottom:none}
+.rtbl tr:nth-child(even) td{background:rgba(255,255,255,.6)}
+.rtbl tr:nth-child(odd) td{background:var(--sand)}
+.ltag{display:inline-block;background:var(--foam);color:var(--tide);
+      border-radius:4px;padding:.12rem .45rem;font-weight:700;font-size:.76rem}
+.ntag{display:inline-block;background:#fff3e6;color:var(--warn);
+      border-radius:3px;padding:.08rem .35rem;font-size:.68rem;font-weight:700;
+      vertical-align:middle;margin-left:.3rem}
+
+/* DISCLAIMER */
+.disc{background:#fff8f0;border:1px solid #f0d8b8;border-radius:8px;
+      padding:1.1rem 1.4rem;margin-top:2rem;font-size:.81rem;color:#705030;line-height:1.75}
+.disc strong{color:var(--coral)}
+.disc a{color:var(--warn)}
+
+/* DEV NOTE */
+.devnote{background:#fff;border:1px solid #d4e8ee;border-radius:10px;
+         padding:1.5rem;margin-top:2rem;display:flex;gap:1rem;align-items:flex-start}
+.devnote-icon{font-size:1.5rem;flex-shrink:0}
+.devnote h4{font-family:'Syne',sans-serif;font-size:.9rem;margin-bottom:.3rem}
+.devnote p{font-size:.8rem;color:#555;line-height:1.7}
+.devnote code{background:var(--foam);border:1px solid #c8dde4;border-radius:3px;
+              padding:.1rem .35rem;font-size:.78rem;color:var(--tide)}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;z-index:200;
+          background:rgba(15,26,18,.7);align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--sand);border-radius:12px;padding:2rem;max-width:400px;
+       width:90%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.3)}
+.modal h3{font-family:'Instrument Serif',serif;font-size:1.5rem;margin-bottom:.5rem}
+.modal p{font-size:.86rem;color:#555;margin-bottom:1.2rem;line-height:1.7}
+.modal-close{background:var(--tide);color:#fff;border:none;border-radius:6px;
+             padding:.6rem 1.5rem;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700}
+
+/* TOXIN compact reminder (second instance) */
+.toxin-section.compact{padding:1.2rem 2rem;border-top:2px solid var(--coral)}
+.toxin-section.compact .toxin-banner{padding:1rem 1.2rem;margin-bottom:0}
+.toxin-section.compact .toxin-grid,.toxin-section.compact p:last-child{display:none}
+.toxin-section{background:#fff8f0;border-top:3px solid var(--coral);padding:3rem 2rem}
+.toxin-inner{max-width:900px;margin:0 auto}
+.toxin-banner{background:var(--coral);color:#fff;border-radius:10px;padding:1.4rem 1.6rem;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:flex-start}
+.toxin-banner-icon{font-size:2rem;flex-shrink:0}
+.toxin-banner h3{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;margin-bottom:.3rem}
+.toxin-banner p{font-size:.83rem;line-height:1.65;opacity:.92}
+.toxin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin-top:1.2rem}
+.toxin-card{background:#fff;border-radius:8px;border:2px solid #e8e0d4;padding:1rem 1.2rem}
+.toxin-card.danger{border-color:var(--coral);background:#fff5f3}
+.toxin-card h4{font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;margin-bottom:.4rem}
+.toxin-card p{font-size:.79rem;color:#666;line-height:1.6}
+.toxin-link{display:inline-block;margin-top:1rem;background:var(--coral);color:#fff;text-decoration:none;padding:.6rem 1.4rem;border-radius:6px;font-family:'Syne',sans-serif;font-weight:700;font-size:.83rem;transition:background .2s}
+.toxin-link:hover{background:#a84830}
+
+/* MESSAGE BOARD */
+.msgboard-section{background:var(--foam);padding:3rem 2rem}
+.msgboard-inner{max-width:900px;margin:0 auto}
+.msg-intro{background:#fff;border-radius:10px;border:1px solid #c8dde4;padding:1.2rem 1.4rem;margin-bottom:1.5rem;font-size:.85rem;color:#444;line-height:1.7}
+.msg-intro strong{color:var(--tide)}
+.msg-form-wrap{background:#fff;border-radius:10px;border:1px solid #c8dde4;padding:1.5rem}
+.msg-form-wrap h4{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:800;color:var(--ink);margin-bottom:1rem}
+.msg-field{margin-bottom:1rem}
+.msg-label{display:block;font-size:.78rem;font-weight:700;color:var(--tide);font-family:'Syne',sans-serif;margin-bottom:.4rem;letter-spacing:.05em}
+.msg-input{width:100%;padding:.6rem .85rem;border:1.5px solid #cdd8e0;border-radius:6px;font-size:.85rem;font-family:'Inter',sans-serif;color:var(--ink);transition:border-color .2s;background:#fff}
+.msg-input:focus{border-color:var(--tide);outline:none}
+textarea.msg-input{resize:vertical;min-height:90px}
+.msg-select{width:100%;padding:.6rem .85rem;border:1.5px solid #cdd8e0;border-radius:6px;font-size:.85rem;background:#fff;color:var(--ink);cursor:pointer}
+.msg-submit{background:var(--tide);color:#fff;border:none;border-radius:6px;padding:.65rem 1.5rem;font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer;transition:background .2s}
+.msg-submit:hover{background:#164a5a}
+.msg-note{font-size:.73rem;color:#888;margin-top:.75rem;line-height:1.6}
+.msg-success{display:none;background:#e8f5ee;border:1px solid #b0d8c4;border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;font-size:.85rem;color:var(--kelp);font-weight:600}
+.msg-success.show{display:block}
+
+/* STOCK AD */
+.stock-ad-section{background:linear-gradient(135deg,#0f1a12 0%,#1a3040 100%);padding:2.5rem 2rem}
+.stock-ad-inner{max-width:900px;margin:0 auto;display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+.stock-ad-badge{background:var(--kelp);color:#fff;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:.3rem .7rem;border-radius:4px;flex-shrink:0;align-self:flex-start}
+.stock-ad-content{flex:1;min-width:220px}
+.stock-ad-content h3{font-family:'Instrument Serif',serif;font-size:1.4rem;color:var(--sand);margin-bottom:.4rem;line-height:1.2}
+.stock-ad-content p{font-size:.83rem;color:#a0b4bb;line-height:1.65;margin-bottom:.8rem}
+.stock-tickers{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+.ticker-tag{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#c8e8f0;font-family:'Syne',sans-serif;font-weight:800;font-size:.78rem;padding:.3rem .7rem;border-radius:5px}
+.stock-ad-cta{background:var(--sand);color:var(--ink);display:inline-block;text-decoration:none;padding:.6rem 1.3rem;border-radius:6px;font-family:'Syne',sans-serif;font-weight:800;font-size:.83rem;opacity:.5;cursor:default;pointer-events:none}
+.stock-ad-disclaimer{font-size:.68rem;color:rgba(160,180,188,.6);margin-top:.5rem}
+.stock-ad-placeholder{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.15);border-radius:8px;padding:1.2rem 1.5rem;color:rgba(255,255,255,.3);font-size:.78rem;font-style:italic;text-align:center;min-width:180px;flex-shrink:0}
+
+@media(max-width:700px){
+  .stock-ad-inner{flex-direction:column}
+  .stock-ad-placeholder{width:100%}
+}
+
+/* FOOTER */
+footer{background:var(--ink);color:var(--mist);padding:2rem;
+       text-align:center;font-size:.78rem;line-height:1.9}
+footer a{color:var(--mist)}
+footer strong{color:var(--sand)}
+
+/* i18n — one element per language, show only the active one */
+.t{display:none}
+html[data-lang=en] .t-en{display:inline}
+html[data-lang=zh] .t-zh{display:inline}
+html[data-lang=ko] .t-ko{display:inline}
+html[data-lang=ja] .t-ja{display:inline}
+html[data-lang=vi] .t-vi{display:inline}
+/* block-level */
+.tb{display:none}
+html[data-lang=en] .tb-en{display:block}
+html[data-lang=zh] .tb-zh{display:block}
+html[data-lang=ko] .tb-ko{display:block}
+html[data-lang=ja] .tb-ja{display:block}
+html[data-lang=vi] .tb-vi{display:block}
+
+@media(max-width:700px){
+  nav{padding:0 1rem}.nav-center{display:none}
+  .hero{padding:3.5rem 1.25rem 3rem}
+  .sw{padding:3rem 1.25rem}
+  .email-row{flex-direction:column}.btn-submit{width:100%}
+  .subscribe-form-card{padding:1.5rem 1.25rem}
+  .rtbl{font-size:.75rem}.rtbl th,.rtbl td{padding:.55rem .7rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">Tide<span>Harvest</span></a>
+  <div class="nav-center">
+    <a href="#beaches">
+      <span class="t t-en">Beaches</span><span class="t t-zh">海滩地点</span>
+      <span class="t t-ko">해변</span><span class="t t-ja">浜辺</span><span class="t t-vi">Bãi biển</span>
+    </a>
+    <a href="#regulations">
+      <span class="t t-en">Regulations</span><span class="t t-zh">捕捞规定</span>
+      <span class="t t-ko">규정</span><span class="t t-ja">規制</span><span class="t t-vi">Quy định</span>
+    </a>
+    <a href="#how">
+      <span class="t t-en">How It Works</span><span class="t t-zh">功能介绍</span>
+      <span class="t t-ko">사용법</span><span class="t t-ja">使い方</span><span class="t t-vi">Cách dùng</span>
+    </a>
+    <a href="#toxin">
+      <span class="t t-en">Safety</span><span class="t t-zh">毒素安全</span>
+      <span class="t t-ko">안전</span><span class="t t-ja">安全</span><span class="t t-vi">An toàn</span>
+    </a>
+    <a href="#suggest">
+      <span class="t t-en">Suggest</span><span class="t t-zh">提建议</span>
+      <span class="t t-ko">제안</span><span class="t t-ja">提案</span><span class="t t-vi">Đề xuất</span>
+    </a>
+    <a href="#subscribe" class="nav-cta">
+      <span class="t t-en">Get Alerts</span><span class="t t-zh">免费订阅</span>
+      <span class="t t-ko">알림 받기</span><span class="t t-ja">無料登録</span><span class="t t-vi">Đăng ký</span>
+    </a>
+  </div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" onclick="setLang('zh')">中文</button>
+    <button class="lang-btn" onclick="setLang('ko')">한국어</button>
+    <button class="lang-btn" onclick="setLang('ja')">日本語</button>
+    <button class="lang-btn" onclick="setLang('vi')">Tiếng Việt</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Washington State Shellfish &amp; Fishing Alerts</div>
+  <h1>
+    <span class="tb tb-en">Pick Your Species,<br><em>We Find the Window</em></span>
+    <span class="tb tb-zh">先选物种，<br><em>再找最佳时机</em></span>
+    <span class="tb tb-ko">종을 먼저 선택하면,<br><em>최적의 시간을 알려드립니다</em></span>
+    <span class="tb tb-ja">種類を選んで、<br><em>最適な時期をお知らせ</em></span>
+    <span class="tb tb-vi">Chọn loài trước,<br><em>chúng tôi tìm thời điểm tốt nhất</em></span>
+  </h1>
+  <p class="hero-sub">
+    <span class="tb tb-en">Select species → beaches auto-filter → match tide &amp; schedule. All three conditions met? You get an email in advance.</span>
+    <span class="tb tb-zh">选物种 → 地点自动过滤 → 匹配潮汐 + 出行日。三个条件同时满足，提前发邮件通知。</span>
+    <span class="tb tb-ko">종 선택 → 해변 자동 필터 → 조수 + 요일 매칭. 세 조건 동시 충족 시 사전 이메일 발송.</span>
+    <span class="tb tb-ja">種類を選ぶ → 浜辺が自動絞り込み → 潮位と曜日をマッチング。3条件が揃ったら事前メール。</span>
+    <span class="tb tb-vi">Chọn loài → bãi tự lọc → khớp triều + ngày. Đủ 3 điều kiện, email trước.</span>
+  </p>
+  <div class="hero-pills">
+    <div class="pill"><span class="dot dot-open"></span>
+      <span class="t t-en">Season Open</span><span class="t t-zh">季节开放</span>
+      <span class="t t-ko">시즌 오픈</span><span class="t t-ja">シーズン中</span><span class="t t-vi">Đang mở mùa</span>
+    </div>
+    <div class="pill"><span class="dot dot-warn"></span>
+      <span class="t t-en">Seasonal Window</span><span class="t t-zh">季节性开放</span>
+      <span class="t t-ko">시즌 한정</span><span class="t t-ja">季節限定</span><span class="t t-vi">Theo mùa</span>
+    </div>
+    <div class="pill">🌊
+      <span class="t t-en">Low Tide 8AM–6PM</span><span class="t t-zh">低潮 8AM–6PM</span>
+      <span class="t t-ko">간조 8~18시</span><span class="t t-ja">干潮 8〜18時</span><span class="t t-vi">Triều thấp 8SA–6CH</span>
+    </div>
+    <div class="pill">📅
+      <span class="t t-en">Your Chosen Days</span><span class="t t-zh">你选的出行日</span>
+      <span class="t t-ko">선택한 요일</span><span class="t t-ja">選択した曜日</span><span class="t t-vi">Ngày bạn chọn</span>
+    </div>
+  </div>
+</div>
+
+<!-- SUBSCRIBE FORM -->
+<div class="subscribe-section" id="subscribe">
+  <div class="sec-title">
+    <span class="tb tb-en">Set Up Your Harvest Alert</span>
+    <span class="tb tb-zh">设置你的赶海提醒</span>
+    <span class="tb tb-ko">수확 알림 설정</span>
+    <span class="tb tb-ja">収穫アラート設定</span>
+    <span class="tb tb-vi">Thiết lập thông báo thu hoạch</span>
+  </div>
+  <p class="sec-sub">
+    <span class="tb tb-en">Start with your target species — locations auto-filter. All four steps required to subscribe.</span>
+    <span class="tb tb-zh">先选目标物种，地点自动过滤；四步全部完成才可订阅。</span>
+    <span class="tb tb-ko">목표 종 먼저 선택 — 지점이 자동 필터링됩니다. 4단계 모두 완료해야 구독 가능.</span>
+    <span class="tb tb-ja">まず目標種を選ぶ — 場所が自動絞り込みされます。4ステップ完了後に登録。</span>
+    <span class="tb tb-vi">Chọn loài trước — địa điểm tự lọc. Hoàn thành 4 bước mới đăng ký được.</span>
+  </p>
+
+  <div class="subscribe-form-card">
+    <div class="required-hint">
+      <span class="tb tb-en">⚠ All four steps must be completed before subscribing</span>
+      <span class="tb tb-zh">⚠ 步骤 ①②③④ 全部完成，才可点击订阅</span>
+      <span class="tb tb-ko">⚠ 4단계를 모두 완료해야 구독 가능</span>
+      <span class="tb tb-ja">⚠ 4ステップをすべて完了してから登録してください</span>
+      <span class="tb tb-vi">⚠ Hoàn thành đủ 4 bước mới đăng ký được</span>
+    </div>
+    <form id="alertForm" onsubmit="handleSubmit(event)" novalidate>
+
+      <!-- ① SPECIES -->
+      <div class="form-step" id="step-species">
+        <div class="step-label">
+          <span class="step-num">①</span>
+          <span class="t t-en">Target Species (select all you want)</span>
+          <span class="t t-zh">目标物种（可多选）</span>
+          <span class="t t-ko">목표 종 (복수 선택 가능)</span>
+          <span class="t t-ja">目標種（複数選択可）</span>
+          <span class="t t-vi">Loài mục tiêu (chọn nhiều)</span>
+        </div>
+        <div class="chip-grid" id="species-grid"></div>
+        <div class="field-error" id="err-species">
+          <span class="t t-en">Please select at least one species</span>
+          <span class="t t-zh">请至少选择一种目标物种</span>
+          <span class="t t-ko">최소 1가지 종을 선택하세요</span>
+          <span class="t t-ja">少なくとも1種類を選んでください</span>
+          <span class="t t-vi">Vui lòng chọn ít nhất một loài</span>
+        </div>
+      </div>
+
+      <!-- ② LOCATION (multi-select) -->
+      <div class="form-step step-locked" id="step-location">
+        <div class="step-label">
+          <span class="step-num">②</span>
+          <span class="t t-en">Select Location(s) — choose one or more</span>
+          <span class="t t-zh">选择地点（可多选）</span>
+          <span class="t t-ko">장소 선택 (복수 가능)</span>
+          <span class="t t-ja">場所を選択（複数可）</span>
+          <span class="t t-vi">Chọn địa điểm (chọn nhiều)</span>
+        </div>
+        <div class="chip-grid" id="location-grid"></div>
+        <div class="field-error" id="err-location">
+          <span class="t t-en">Please select at least one location</span>
+          <span class="t t-zh">请至少选择一个地点</span>
+          <span class="t t-ko">장소를 하나 이상 선택하세요</span>
+          <span class="t t-ja">場所を少なくとも1つ選んでください</span>
+          <span class="t t-vi">Vui lòng chọn ít nhất một địa điểm</span>
+        </div>
+      </div>
+      <!-- ③ TIDE -->
+      <div class="form-step step-locked" id="step-tide">
+        <div class="step-label">
+          <span class="step-num">③</span>
+          <span class="t t-en">Tide Preference</span>
+          <span class="t t-zh">潮汐偏好</span>
+          <span class="t t-ko">조수 선호</span>
+          <span class="t t-ja">潮位の好み</span>
+          <span class="t t-vi">Sở thích thủy triều</span>
+        </div>
+        <select id="sel-tide" class="form-select" onchange="onTideChange()" required>
+          <option value=""></option>
+        </select>
+        <div class="tide-note" id="tide-note"></div>
+        <div class="field-error" id="err-tide">
+          <span class="t t-en">Please select a tide preference</span>
+          <span class="t t-zh">请选择潮汐偏好</span>
+          <span class="t t-ko">조수 선호를 선택하세요</span>
+          <span class="t t-ja">潮位の好みを選んでください</span>
+          <span class="t t-vi">Vui lòng chọn sở thích triều</span>
+        </div>
+      </div>
+
+      <!-- ④ DAYS -->
+      <div class="form-step step-locked" id="step-days">
+        <div class="step-label">
+          <span class="step-num">④</span>
+          <span class="t t-en">Preferred Days (multi-select, at least one — turns red when selected)</span>
+          <span class="t t-zh">出行日期（可多选，至少选一天 — 选中后变红）</span>
+          <span class="t t-ko">선호 요일 (복수 선택, 최소 1일 — 선택 시 빨간색)</span>
+          <span class="t t-ja">希望曜日（複数可、最低1日 — 選択すると赤くなる）</span>
+          <span class="t t-vi">Ngày ưa thích (chọn nhiều, tối thiểu 1 — đỏ khi chọn)</span>
+        </div>
+        <div class="day-grid" id="day-grid"></div>
+        <div class="day-hint">
+          <span class="t t-en">💡 Click to select (turns green)  click again to deselect  multiple days ok</span>
+          <span class="t t-zh">💡 点击即选中（变绿）  再点取消  可同时选多天</span>
+          <span class="t t-ko">💡 클릭으로 선택(녹색)  다시 클릭 해제  여러 날 가능</span>
+          <span class="t t-ja">💡 クリックで選択（緑になる）  もう一度で解除  複数可</span>
+          <span class="t t-vi">💡 Click để chọn (xanh lá)  click lại để bỏ  chọn nhiều ngày</span>
+        </div>
+        <div class="field-error" id="err-days">
+          <span class="t t-en">Please select at least one day</span>
+          <span class="t t-zh">请至少选择一天</span>
+          <span class="t t-ko">최소 하루를 선택하세요</span>
+          <span class="t t-ja">最低1日を選んでください</span>
+          <span class="t t-vi">Vui lòng chọn ít nhất một ngày</span>
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="form-step">
+        <div class="step-label">
+          <span class="t t-en">📬 Email Address</span>
+          <span class="t t-zh">📬 邮箱地址</span>
+          <span class="t t-ko">📬 이메일 주소</span>
+          <span class="t t-ja">📬 メールアドレス</span>
+          <span class="t t-vi">📬 Địa chỉ email</span>
+        </div>
+        <div class="email-row">
+          <input type="email" id="inp-email" class="email-input" placeholder="your@email.com" required>
+          <button type="submit" class="btn-submit">
+            <span class="t t-en">Subscribe Free →</span>
+            <span class="t t-zh">免费订阅 →</span>
+            <span class="t t-ko">무료 구독 →</span>
+            <span class="t t-ja">無料登録 →</span>
+            <span class="t t-vi">Đăng ký miễn phí →</span>
+          </button>
+        </div>
+        <div class="field-error" id="err-email">
+          <span class="t t-en">Please enter a valid email address</span>
+          <span class="t t-zh">请输入有效的邮箱地址</span>
+          <span class="t t-ko">유효한 이메일을 입력하세요</span>
+          <span class="t t-ja">有効なメールアドレスを入力してください</span>
+          <span class="t t-vi">Vui lòng nhập email hợp lệ</span>
+        </div>
+      </div>
+
+      <div class="form-note">
+        <span class="t t-en">📱 SMS alerts coming soon · Always free · Unsubscribe anytime · No data sold</span>
+        <span class="t t-zh">📱 SMS短信提醒即将推出 · 永久免费 · 随时退订 · 不出售数据</span>
+        <span class="t t-ko">📱 SMS 곧 출시 · 무료 · 언제든 취소 · 데이터 판매 없음</span>
+        <span class="t t-ja">📱 SMS近日公開 · 無料 · いつでも解除 · データ販売なし</span>
+        <span class="t t-vi">📱 SMS sắp ra mắt · Miễn phí · Hủy bất cứ lúc nào · Không bán dữ liệu</span>
+      </div>
+      <!-- Alert schedule notice -->
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:1rem 1.1rem;margin-top:1rem;font-size:.78rem;color:#c8e8f0;line-height:1.8;">
+        <div style="font-size:.8rem;font-weight:700;color:#fff;margin-bottom:.5rem;letter-spacing:.04em;">
+          <span class="t t-en">📬 What you'll receive after subscribing:</span>
+          <span class="t t-zh">📬 订阅后你将收到：</span>
+          <span class="t t-ko">📬 구독 후 받게 될 내용:</span>
+          <span class="t t-ja">📬 登録後に届く内容:</span>
+          <span class="t t-vi">📬 Sau khi đăng ký bạn sẽ nhận được:</span>
+        </div>
+        <div>
+          📅 <span class="t t-en"><strong style="color:#fff">Monthly (1st of each month):</strong> 30-day tide &amp; season forecast for your selected species and locations.</span>
+          <span class="t t-zh"><strong style="color:#fff">每月1号：</strong>未来30天潮汐与季节预报，涵盖你选择的物种和地点。</span>
+          <span class="t t-ko"><strong style="color:#fff">매월 1일:</strong> 선택한 어종 및 장소에 대한 30일 조수 및 시즌 예보.</span>
+          <span class="t t-ja"><strong style="color:#fff">毎月1日:</strong> 選択した種と場所の30日間の潮汐・シーズン予報。</span>
+          <span class="t t-vi"><strong style="color:#fff">Ngày 1 hàng tháng:</strong> Dự báo thủy triều và mùa vụ 30 ngày cho loài và địa điểm bạn chọn.</span>
+        </div>
+        <div style="margin-top:.4rem;">
+          🧪 <span class="t t-en"><strong style="color:#fff">Weekly (every Monday):</strong> Current DOH biotoxin safety status for your subscribed locations. Biotoxin data is tested and updated weekly by Washington DOH (more frequently May–Oct). <em>Do not rely on the monthly forecast alone — always check biotoxin status before heading out.</em></span>
+          <span class="t t-zh"><strong style="color:#fff">每周一：</strong>你订阅地点的DOH当前毒素安全状态。毒素数据由华盛顿州DOH每周更新（5-10月更频繁）。<em>请勿仅依赖月度预报，出发前务必确认毒素状态。</em></span>
+          <span class="t t-ko"><strong style="color:#fff">매주 월요일:</strong> 구독한 장소의 DOH 생물독소 안전 상태. 생물독소 데이터는 Washington DOH에 의해 매주 업데이트됩니다(5~10월은 더 자주). <em>월간 예보만 믿지 말고 출발 전 반드시 확인하세요.</em></span>
+          <span class="t t-ja"><strong style="color:#fff">毎週月曜日:</strong> 登録場所のDOH生物毒素安全状況。毒素データはワシントン州DOHが毎週更新(5〜10月はより頻繁)。<em>月次予報だけを信頼せず、出発前に必ず確認してください。</em></span>
+          <span class="t t-vi"><strong style="color:#fff">Thứ Hai hàng tuần:</strong> Tình trạng an toàn sinh độc tố DOH hiện tại cho các địa điểm đã đăng ký. Dữ liệu được cập nhật hàng tuần (thường xuyên hơn từ tháng 5–10). <em>Đừng chỉ dựa vào dự báo tháng — luôn kiểm tra trước khi đi.</em></span>
+        </div>
+        <div style="margin-top:.4rem;">
+          🦪 <span class="t t-en"><strong style="color:#fff">Razor Clam subscribers also receive:</strong> Weekly WDFW-approved open days, updated every Monday based on the latest WDFW announcement.</span>
+          <span class="t t-zh"><strong style="color:#fff">订阅Razor Clam的用户额外收到：</strong>每周一根据WDFW最新公告更新的本周开放日。</span>
+          <span class="t t-ko"><strong style="color:#fff">Razor Clam 구독자 추가 수신:</strong> 매주 월요일 최신 WDFW 발표에 따른 이번 주 개방일.</span>
+          <span class="t t-ja"><strong style="color:#fff">Razor Clam購読者も受信:</strong> 毎週月曜日にWDFWの最新発表に基づく今週の開放日。</span>
+          <span class="t t-vi"><strong style="color:#fff">Người đăng ký Razor Clam cũng nhận được:</strong> Ngày mở cửa tuần này theo thông báo WDFW mới nhất, cập nhật mỗi thứ Hai.</span>
+        </div>
+        <div style="margin-top:.4rem;">
+          ✉️ <span class="t t-en"><strong style="color:#fff">New subscribers:</strong> Receive a welcome email immediately — we run a full personalized check just for you: current biotoxin status for your locations, this week's WDFW Razor Clam open days (if subscribed), and all tide-matching dates from today through end of month.</span>
+          <span class="t t-zh"><strong style="color:#fff">新订阅者：</strong>订阅后立即收到专属欢迎邮件——我们会立刻为你单独运行一次全面检查：你所在地点的当前毒素状态、本周WDFW Razor Clam开放日（如已订阅）以及从今天到本月底所有符合潮汐条件的日期。</span>
+          <span class="t t-ko"><strong style="color:#fff">신규 구독자:</strong> 구독 즉시 맞춤 환영 이메일 수신 — 구독 위치의 현재 생물독소 상태, 이번 주 WDFW Razor Clam 개방일(구독 시), 오늘부터 월말까지 조수 조건에 맞는 모든 날짜를 즉시 확인해 드립니다.</span>
+          <span class="t t-ja"><strong style="color:#fff">新規登録者:</strong> 登録直後に専用ウェルカムメールを受信 — 登録場所の現在の生物毒素状況、今週のWDFW Razor Clam開放日(登録時)、今日から月末までの潮汐条件に合う全日程をすぐにお届けします。</span>
+          <span class="t t-vi"><strong style="color:#fff">Người đăng ký mới:</strong> Nhận email chào mừng ngay lập tức — chúng tôi chạy kiểm tra cá nhân hóa đầy đủ cho bạn: tình trạng sinh độc tố hiện tại, ngày mở cửa Razor Clam tuần này (nếu đăng ký), và tất cả ngày phù hợp thủy triều từ hôm nay đến cuối tháng.</span>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toxin-section" id="toxin">
+  <div class="toxin-inner">
+    <div class="slabel" style="color:var(--coral)">
+      <span class="t t-en">Shellfish Safety</span><span class="t t-zh">贝类安全</span>
+      <span class="t t-ko">조개 안전</span><span class="t t-ja">貝類安全</span><span class="t t-vi">An toàn thủy sản</span>
+    </div>
+    <h2>
+      <span class="tb tb-en">⚠ Check Before You Harvest</span>
+      <span class="tb tb-zh">⚠ 采集前必须查毒素状态</span>
+      <span class="tb tb-ko">⚠ 채취 전 반드시 확인</span>
+      <span class="tb tb-ja">⚠ 採取前に必ず確認</span>
+      <span class="tb tb-vi">⚠ Kiểm tra trước khi thu hoạch</span>
+    </h2>
+
+    <div class="toxin-banner">
+      <div class="toxin-banner-icon">🚨</div>
+      <div>
+        <h3><span class="t t-en">Biotoxin closures can happen at ANY time — even at open beaches</span><span class="t t-zh">生物毒素关闭随时可能发生——即使是平时开放的海滩</span><span class="t t-ko">생물독소 폐쇄는 언제든 발생 가능 — 평소 열린 해변도 마찬가지</span><span class="t t-ja">生物毒素閉鎖はいつでも発生し得る — 通常開放されている浜辺でも</span><span class="t t-vi">Đóng cửa biotoxin có thể xảy ra BẤT CỨ LÚC NÀO — kể cả bãi biển thường mở</span></h3>
+        <p><span class="t t-en">Paralytic Shellfish Poisoning (PSP), domoic acid (ASP), and other biotoxins can make shellfish dangerous even when they look and smell fine. Always verify the official DOH Shellfish Safety Map before every harvest — no exceptions.</span><span class="t t-zh">麻痹性贝类中毒（PSP）、多摩酸（ASP）等生物毒素即使外观和气味正常也会让贝类变得危险。每次赶海前必须查看DOH官方贝类安全地图，没有例外。</span><span class="t t-ko">마비성 패류독소(PSP), 도모산(ASP) 등 생물독소는 외관과 냄새가 정상이어도 패류를 위험하게 만들 수 있습니다. 매번 채취 전 반드시 DOH 공식 안전 지도를 확인하세요.</span><span class="t t-ja">麻痺性貝毒(PSP)、ドウモイ酸(ASP)などの生物毒素は外見・臭い正常でも貝類を危険にする。毎回採取前に必ずDOH公式安全マップを確認すること。</span><span class="t t-vi">Độc tố liệt PSP, axit domoic (ASP) và các biotoxin khác có thể khiến thủy sản nguy hiểm dù trông và ngửi bình thường. Luôn kiểm tra bản đồ DOH chính thức trước mỗi lần thu hoạch.</span></p>
+      </div>
+    </div>
+
+    <div class="toxin-grid">
+      <div class="toxin-card danger">
+        <h4>🗺️ <span class="t t-en">WA DOH Shellfish Safety Map</span><span class="t t-zh">华盛顿DOH贝类安全地图</span><span class="t t-ko">WA DOH 패류 안전 지도</span><span class="t t-ja">WA DOH貝類安全マップ</span><span class="t t-vi">Bản đồ an toàn DOH WA</span></h4>
+        <p><span class="t t-en">Official real-time map showing open/closed/conditionally open status for every WA shellfish beach. Updated regularly.</span><span class="t t-zh">官方实时地图，显示华盛顿州每个贝类海滩的开放/关闭/有条件开放状态，定期更新。</span><span class="t t-ko">WA 모든 패류 해변의 개방/폐쇄/조건부 개방 상태를 보여주는 공식 실시간 지도.</span><span class="t t-ja">WA州の全貝類浜辺の開放/閉鎖/条件付き開放状況を示す公式リアルタイムマップ。</span><span class="t t-vi">Bản đồ thời gian thực chính thức hiển thị trạng thái mở/đóng/mở có điều kiện của mọi bãi thủy sản WA.</span></p>
+        <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank" class="toxin-link">
+          <span class="t t-en">Open DOH Safety Map →</span><span class="t t-zh">打开DOH安全地图 →</span><span class="t t-ko">DOH 안전 지도 열기 →</span><span class="t t-ja">DOH安全マップを開く →</span><span class="t t-vi">Mở bản đồ DOH →</span>
+        </a>
+      </div>
+      <div class="toxin-card">
+        <h4>📞 <span class="t t-en">DOH Biotoxin Hotline</span><span class="t t-zh">DOH生物毒素热线</span><span class="t t-ko">DOH 생물독소 핫라인</span><span class="t t-ja">DOH生物毒素ホットライン</span><span class="t t-vi">Đường dây nóng DOH</span></h4>
+        <p><span class="t t-en">Call for current beach status, closures, and advisories. 24/7 recorded information.</span><span class="t t-zh">拨打了解当前海滩状态、关闭信息及健康公告。24小时录音信息。</span><span class="t t-ko">현재 해변 상태, 폐쇄 정보 및 건강 권고사항을 확인하세요. 24시간 녹음 안내.</span><span class="t t-ja">現在の浜辺の状況・閉鎖情報・健康勧告を確認。24時間録音情報。</span><span class="t t-vi">Gọi để biết tình trạng bãi hiện tại, đóng cửa và khuyến cáo. Thông tin ghi âm 24/7.</span></p>
+        <a href="tel:18005625632" class="toxin-link" style="background:var(--tide)"><strong>1-800-562-5632</strong></a>
+      </div>
+      <div class="toxin-card">
+        <h4>⚠️ <span class="t t-en">If a beach shows CLOSED on the map</span><span class="t t-zh">如地图显示该海滩已关闭</span><span class="t t-ko">지도에 폐쇄로 표시된 경우</span><span class="t t-ja">マップで閉鎖表示の場合</span><span class="t t-vi">Nếu bãi hiển thị ĐÓNG trên bản đồ</span></h4>
+        <p><span class="t t-en">TideHarvest will display a warning and will NOT recommend harvesting at that location. Do not harvest shellfish from closed beaches regardless of how they look.</span><span class="t t-zh">TideHarvest将显示警告，不会推荐在该地点采集。无论外观如何，都不要在关闭的海滩采集贝类。</span><span class="t t-ko">TideHarvest는 경고를 표시하고 해당 장소에서의 채취를 권장하지 않습니다. 외관에 관계없이 폐쇄된 해변에서 패류를 채취하지 마세요.</span><span class="t t-ja">TideHarvestは警告を表示し、その場所での採取を推奨しません。外見に関わらず、閉鎖された浜辺での貝類採取は禁止。</span><span class="t t-vi">TideHarvest sẽ hiển thị cảnh báo và KHÔNG khuyến nghị thu hoạch ở địa điểm đó. Không thu hoạch thủy sản ở bãi đóng cửa dù trông thế nào.</span></p>
+      </div>
+    </div>
+
+    <p style="font-size:.78rem;color:#888;margin-top:1.2rem;line-height:1.7">
+      <span class="t t-en">🔗 Direct link to WA DOH Shellfish Safety Map: <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">fortress.wa.gov/doh/biotoxin/biotoxin.html</a></span>
+      <span class="t t-zh">🔗 DOH贝类安全地图直达链接：<a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">fortress.wa.gov/doh/biotoxin/biotoxin.html</a></span>
+      <span class="t t-ko">🔗 DOH 패류 안전 지도 직접 링크: <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">fortress.wa.gov/doh/biotoxin/biotoxin.html</a></span>
+      <span class="t t-ja">🔗 DOH貝類安全マップ直リンク: <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">fortress.wa.gov/doh/biotoxin/biotoxin.html</a></span>
+      <span class="t t-vi">🔗 Link trực tiếp bản đồ DOH: <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">fortress.wa.gov/doh/biotoxin/biotoxin.html</a></span>
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STOCK SIGNAL AD (PLACEHOLDER)
+     ══════════════════════════════════════════════ -->
+<!-- HOW IT WORKS -->
+<div class="sw" id="how">
+  <div class="how-bg">
+    <div class="slabel">
+      <span class="t t-en">How It Works</span><span class="t t-zh">工作原理</span>
+      <span class="t t-ko">사용법</span><span class="t t-ja">使い方</span><span class="t t-vi">Cách hoạt động</span>
+    </div>
+    <h2>
+      <span class="tb tb-en">TideHarvest Does the Legwork</span>
+      <span class="tb tb-zh">TideHarvest 替你盯着一切</span>
+      <span class="tb tb-ko">TideHarvest가 모든 것을 모니터링합니다</span>
+      <span class="tb tb-ja">TideHarvestがすべてをチェック</span>
+      <span class="tb tb-vi">TideHarvest theo dõi mọi thứ</span>
+    </h2>
+    <div class="hgrid">
+      <div class="hstep"><div class="hicon">📡</div>
+        <h3><span class="t t-en">Season Tracking</span><span class="t t-zh">实时追踪季节</span><span class="t t-ko">시즌 추적</span><span class="t t-ja">シーズン追跡</span><span class="t t-vi">Theo dõi mùa</span></h3>
+        <p><span class="t t-en">Monitors WDFW seasons and DOH health advisories in real time, including emergency closures.</span><span class="t t-zh">持续监测WDFW季节状态与DOH健康公告，含紧急关闭令。</span><span class="t t-ko">WDFW 시즌 및 DOH 건강 권고를 실시간으로 모니터링합니다.</span><span class="t t-ja">WDFWシーズンとDOH健康警告をリアルタイムで監視。</span><span class="t t-vi">Theo dõi mùa WDFW và cảnh báo sức khỏe DOH theo thời gian thực.</span></p>
+      </div>
+      <div class="hstep"><div class="hicon">🌊</div>
+        <h3><span class="t t-en">Tide Filtering</span><span class="t t-zh">潮汐数据过滤</span><span class="t t-ko">조수 필터링</span><span class="t t-ja">潮位フィルタリング</span><span class="t t-vi">Lọc thủy triều</span></h3>
+        <p><span class="t t-en">Cross-references NOAA tide data for only the lows within your range between 8 AM and 6 PM.</span><span class="t t-zh">交叉参考NOAA潮汐预报，只筛选你设定范围内、8AM–6PM的低潮。</span><span class="t t-ko">NOAA 조수 데이터를 교차 참조하여 오전 8시~오후 6시 사이 조건에 맞는 간조만 필터링.</span><span class="t t-ja">NOAAの潮位データを参照し8時〜18時の指定範囲内の干潮のみ抽出。</span><span class="t t-vi">Tham chiếu dữ liệu NOAA để lọc chỉ những triều thấp trong phạm vi 8SA–6CH.</span></p>
+      </div>
+      <div class="hstep"><div class="hicon">📅</div>
+        <h3><span class="t t-en">Day Matching</span><span class="t t-zh">按你的日程匹配</span><span class="t t-ko">요일 매칭</span><span class="t t-ja">曜日マッチング</span><span class="t t-vi">Khớp ngày</span></h3>
+        <p><span class="t t-en">Alert fires only when season, tide, and your chosen day type all align simultaneously.</span><span class="t t-zh">三个条件同时满足才发提醒，绝不发无效通知。</span><span class="t t-ko">시즌·조수·요일 세 조건이 동시에 충족될 때만 알림 발송.</span><span class="t t-ja">シーズン・潮位・曜日の3条件が揃ったときのみ通知。</span><span class="t t-vi">Chỉ thông báo khi mùa, triều và ngày đều khớp đồng thời.</span></p>
+      </div>
+      <div class="hstep"><div class="hicon">🔔</div>
+        <h3><span class="t t-en">Advance Notice</span><span class="t t-zh">提前3–5天通知</span><span class="t t-ko">3~5일 전 알림</span><span class="t t-ja">3〜5日前通知</span><span class="t t-vi">Thông báo trước 3–5 ngày</span></h3>
+        <p><span class="t t-en">Email 3–5 days before your harvest window to give you time to plan. SMS coming soon.</span><span class="t t-zh">赶海窗口前3–5天发邮件，让你有时间安排。短信提醒即将上线。</span><span class="t t-ko">수확 기회 3~5일 전에 이메일 발송. SMS 곧 출시.</span><span class="t t-ja">収穫チャンスの3〜5日前にメール。SMS近日公開。</span><span class="t t-vi">Email 3–5 ngày trước cửa sổ thu hoạch. SMS sắp ra mắt.</span></p>
+      </div>
+      <div class="hstep"><div class="hicon" style="background:var(--coral)">🚨</div>
+        <h3><span class="t t-en">Biotoxin Cross-Check</span><span class="t t-zh">毒素交叉比对</span><span class="t t-ko">생물독소 교차 확인</span><span class="t t-ja">生物毒素チェック</span><span class="t t-vi">Kiểm tra chéo độc tố</span></h3>
+        <p><span class="t t-en">Before every alert, TideHarvest checks the DOH Shellfish Safety Map. If your beach is closed due to biotoxins, the alert will say <strong>"DO NOT GO"</strong> and explain why — no false windows, ever.</span><span class="t t-zh">每次发提醒前，TideHarvest都会比对DOH贝类安全地图。如果你的海滩因毒素关闭，提醒邮件会明确写<strong>"禁止前往"</strong>并说明原因——绝不发虚假窗口。</span><span class="t t-ko">알림마다 DOH 패류 안전 지도를 확인합니다. 독소로 폐쇄된 경우 이메일은 <strong>"가지 마세요"</strong>와 이유를 명시합니다.</span><span class="t t-ja">毎回アラート前にDOH安全マップを確認。毒素で閉鎖中なら<strong>「行ってはいけない」</strong>と理由を記載します。</span><span class="t t-vi">Trước mỗi cảnh báo, TideHarvest kiểm tra bản đồ DOH. Nếu bãi đóng vì độc tố, email sẽ ghi rõ <strong>"KHÔNG ĐI"</strong> và lý do.</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stock-ad-section" id="stock-signals">
+  <div class="stock-ad-inner">
+    <div>
+      <div class="stock-ad-badge">
+        <span class="t t-en">Free Now</span><span class="t t-zh">现在免费</span><span class="t t-ko">지금 무료</span><span class="t t-ja">今なら無料</span><span class="t t-vi">Miễn phí ngay</span>
+      </div>
+    </div>
+    <div class="stock-ad-content">
+      <h3>
+        <span class="tb tb-en">Intraday Stock Signal System</span>
+        <span class="tb tb-zh">股票日内交易提示系统</span>
+        <span class="tb tb-ko">장중 주식 신호 시스템</span>
+        <span class="tb tb-ja">日中株式シグナルシステム</span>
+        <span class="tb tb-vi">Hệ thống tín hiệu giao dịch trong ngày</span>
+      </h3>
+      <p>
+        <span class="tb tb-en">5-minute level short-term trading alerts developed in-house. Currently covering 3 high-volatility tickers. Free to try during beta.</span>
+        <span class="tb tb-zh">自研5分钟级别短线交易提示系统，目前覆盖3只高波动股票，测试期间免费体验。</span>
+        <span class="tb tb-ko">자체 개발한 5분봉 단기 매매 신호 시스템. 현재 고변동성 종목 3개 지원. 베타 기간 무료.</span>
+        <span class="tb tb-ja">自社開発の5分足レベル短期売買シグナルシステム。現在3銘柄対応。ベータ期間中は無料。</span>
+        <span class="tb tb-vi">Hệ thống tín hiệu giao dịch ngắn hạn 5 phút tự phát triển. Hiện hỗ trợ 3 mã cổ phiếu biến động cao. Miễn phí trong giai đoạn beta.</span>
+      </p>
+      <div class="stock-tickers">
+        <span class="ticker-tag">NVDA</span>
+        <span class="ticker-tag">TSLA</span>
+        <span class="ticker-tag">PLTR</span>
+      </div>
+      <a href="#" class="stock-ad-cta">
+        <span class="t t-en">Details Coming Soon →</span><span class="t t-zh">详情即将发布 →</span>
+        <span class="t t-ko">곧 상세 정보 →</span><span class="t t-ja">詳細近日公開 →</span><span class="t t-vi">Sắp ra mắt →</span>
+      </a>
+      <div class="stock-ad-disclaimer">
+        <span class="t t-en">⚠ Not investment advice. Past signal performance does not guarantee future results. Trade at your own risk.</span>
+        <span class="t t-zh">⚠ 非投资建议。历史信号表现不代表未来结果，交易风险自负。</span>
+        <span class="t t-ko">⚠ 투자 조언 아님. 과거 신호 성과는 미래 결과를 보장하지 않음. 투자는 본인 책임.</span>
+        <span class="t t-ja">⚠ 投資助言ではありません。過去のシグナル実績は将来の結果を保証しません。取引は自己責任。</span>
+        <span class="t t-vi">⚠ Không phải tư vấn đầu tư. Kết quả tín hiệu quá khứ không đảm bảo tương lai. Giao dịch rủi ro bản thân.</span>
+      </div>
+      <div class="stock-ad-disclaimer" style="margin-top:.35rem;opacity:.85">
+        <span class="t t-en">This system is based solely on technical indicators and fixed quantitative algorithm models. The publisher does not handle user funds and does not provide one-on-one consulting.</span>
+        <span class="t t-zh">本系统仅基于技术指标和固定的量化算法模型。发布者不经手用户资金，不提供一对一咨询。</span>
+        <span class="t t-ko">본 시스템은 기술적 지표와 고정된 정량적 알고리즘 모델에만 기반합니다. 발행자는 사용자 자금을 취급하지 않으며 일대일 상담을 제공하지 않습니다.</span>
+        <span class="t t-ja">本システムはテクニカル指標と固定された定量アルゴリズムモデルのみに基づいています。発行者はユーザーの資金を取り扱わず、1対1のコンサルティングも提供しません。</span>
+        <span class="t t-vi">Hệ thống này chỉ dựa trên các chỉ báo kỹ thuật và mô hình thuật toán định lượng cố định. Nhà phát hành không xử lý tiền của người dùng và không cung cấp tư vấn một-một.</span>
+      </div>
+    </div>
+    <div class="stock-ad-placeholder">
+      <span class="t t-en">📊 Signal dashboard<br>preview coming soon</span>
+      <span class="t t-zh">📊 信号面板<br>预览即将上线</span>
+      <span class="t t-ko">📊 신호 대시보드<br>미리보기 준비 중</span>
+      <span class="t t-ja">📊 シグナルダッシュボード<br>近日プレビュー公開</span>
+      <span class="t t-vi">📊 Bảng tín hiệu<br>sắp ra mắt</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MESSAGE BOARD — suggest species / locations
+     ══════════════════════════════════════════════ -->
+<!-- REGULATIONS TABLE -->
+<div class="sw" id="regulations">
+  <div class="slabel">
+    <span class="t t-en">At a Glance</span><span class="t t-zh">一览表</span>
+    <span class="t t-ko">한눈에 보기</span><span class="t t-ja">一覧表</span><span class="t t-vi">Tóm tắt</span>
+  </div>
+  <h2>
+    <span class="tb tb-en">Washington State Key Harvest Regulations (2026)</span>
+    <span class="tb tb-zh">华盛顿州主要捕捞规定（2026年）</span>
+    <span class="tb tb-ko">워싱턴주 주요 채취 규정 (2026)</span>
+    <span class="tb tb-ja">ワシントン州採貝・漁主要規則（2026年）</span>
+    <span class="tb tb-vi">Quy định thu hoạch chính của Washington (2026)</span>
+  </h2>
+  <p class="sdesc">
+    <span class="tb tb-en">New rules effective April 1, 2026. Reference only — always check official WDFW regulations.</span>
+    <span class="tb tb-zh">2026年4月1日起新规生效。以下数据仅供参考，请以WDFW官方为准。</span>
+    <span class="tb tb-ko">2026년 4월 1일부터 새 규정 적용. 참고용 — 항상 WDFW 공식 규정 확인.</span>
+    <span class="tb tb-ja">2026年4月1日より新規則適用。参考のみ — 必ず公式WDFW規則を確認。</span>
+    <span class="tb tb-vi">Quy định mới hiệu lực từ 1/4/2026. Chỉ để tham khảo — luôn kiểm tra quy định chính thức.</span>
+  </p>
+  <table class="rtbl">
+    <thead><tr>
+      <th><span class="t t-en">Species</span><span class="t t-zh">物种</span><span class="t t-ko">종</span><span class="t t-ja">種類</span><span class="t t-vi">Loài</span></th>
+      <th><span class="t t-en">Min Size</span><span class="t t-zh">最小尺寸</span><span class="t t-ko">최소 크기</span><span class="t t-ja">最小サイズ</span><span class="t t-vi">Kích thước tối thiểu</span></th>
+      <th><span class="t t-en">Daily Limit</span><span class="t t-zh">每日限额</span><span class="t t-ko">일일 한도</span><span class="t t-ja">日量制限</span><span class="t t-vi">Giới hạn ngày</span></th>
+      <th><span class="t t-en">License</span><span class="t t-zh">需要证件</span><span class="t t-ko">면허</span><span class="t t-ja">ライセンス</span><span class="t t-vi">Giấy phép</span></th>
+      <th><span class="t t-en">Season / Notes</span><span class="t t-zh">季节说明</span><span class="t t-ko">시즌 참고</span><span class="t t-ja">シーズン補足</span><span class="t t-vi">Ghi chú mùa</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td><strong>Razor Clam</strong></td><td><span class="t t-en">None</span><span class="t t-zh">无</span><span class="t t-ko">없음</span><span class="t t-ja">なし</span><span class="t t-vi">Không</span></td><td><span class="ltag">15/person/day</span></td><td><span class="t t-en">Yes (16+)</span><span class="t t-zh">是(16+)</span><span class="t t-ko">필요(16+)</span><span class="t t-ja">要(16+)</span><span class="t t-vi">Cần(16+)</span></td><td><span class="t t-en">Oct–May, specific days announced; DOH domoic acid test required</span><span class="t t-zh">10–5月，具体日期由WDFW公布；须通过DOH domoic acid检测</span><span class="t t-ko">10~5월, 날짜 공지; DOH 도모산 테스트 필요</span><span class="t t-ja">10月~5月, 日程公表; DOHドウモイ酸検査必須</span><span class="t t-vi">Tháng 10–5, ngày cụ thể; cần DOH domoic acid test</span></td></tr>
+      <tr><td><strong>Manila Clam</strong></td><td>1½"</td><td><span class="ltag">40 (combined)</span></td><td><span class="t t-en">Shellfish/Combo</span><span class="t t-zh">贝类/组合证</span></td><td><span class="t t-en">Beach-specific; Wolfe: Jan 15–Apr 15</span><span class="t t-zh">按海滩季节；Wolfe: 1/15–4/15</span><span class="t t-ko">해변별; Wolfe: 1/15–4/15</span><span class="t t-ja">浜辺別; Wolfe: 1月15日〜4月15日</span><span class="t t-vi">Theo bãi; Wolfe: 15/1–15/4</span></td></tr>
+      <tr><td><strong>Pacific Oyster</strong></td><td><span class="t t-en">None (shuck)</span><span class="t t-zh">无(就地破壳)</span><span class="t t-ko">없음(현장)</span><span class="t t-ja">なし(現場で開く)</span><span class="t t-vi">Không (tách tại chỗ)</span></td><td><span class="ltag">18/day</span></td><td><span class="t t-en">Shellfish/Combo</span><span class="t t-zh">贝类/组合证</span></td><td><span class="t t-en">Shells stay on beach; beach-specific season</span><span class="t t-zh">壳须留海滩；按海滩季节</span><span class="t t-ko">껍데기는 해변에; 해변별 시즌</span><span class="t t-ja">殻を浜辺に残す; 浜辺別シーズン</span><span class="t t-vi">Để vỏ trên bãi; mùa theo bãi</span></td></tr>
+      <tr><td><strong>Cockle</strong></td><td>1½"</td><td><span class="ltag">40 (combined)</span></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Wolfe Property &amp; Kvi Beach</span><span class="t t-zh">Wolfe Property及Kvi Beach</span><span class="t t-ko">Wolfe Property 및 Kvi Beach</span><span class="t t-ja">Wolfe Property・Kvi Beach</span><span class="t t-vi">Wolfe Property &amp; Kvi Beach</span></td></tr>
+      <tr><td><strong>Butter Clam</strong></td><td>1½"</td><td><span class="ltag">40 (combined)</span></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Wolfe Property &amp; Kvi Beach; lower intertidal</span><span class="t t-zh">Wolfe Property及Kvi Beach；低潮带</span><span class="t t-ko">Wolfe Property 및 Kvi Beach; 저조대</span><span class="t t-ja">Wolfe Property・Kvi Beach; 低潮帯</span><span class="t t-vi">Wolfe Property &amp; Kvi Beach; vùng triều thấp</span></td></tr>
+      <tr><td><strong>Horse Clam</strong></td><td><span class="t t-en">None spec.</span><span class="t t-zh">无规定</span></td><td><span class="ltag">7/day</span></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Wolfe, Luhr &amp; Kvi Beach; lower intertidal; subject to DOH closures</span><span class="t t-zh">Wolfe/Luhr/Kvi Beach；低潮区；受DOH健康关闭影响</span><span class="t t-ko">Wolfe/Luhr/Kvi Beach; 저조대; DOH 폐쇄 적용</span><span class="t t-ja">Wolfe/Luhr/Kvi Beach; 低潮帯; DOH閉鎖対象</span><span class="t t-vi">Wolfe/Luhr/Kvi Beach; vùng triều thấp; theo DOH</span></td></tr>
+      <tr><td><strong>Geoduck <span class="ntag">New</span></strong></td><td><span class="t t-en">None</span><span class="t t-zh">无</span></td><td><span class="ltag">1/day</span><br><small style="color:#888">(was 3)</small></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Reduced to 1/day from Apr 1, 2026; Wolfe Property &amp; Kvi Beach</span><span class="t t-zh">2026年4月1日起减至1只/天；Wolfe Property及Kvi Beach</span><span class="t t-ko">2026년 4월 1일부터 1개/일; Wolfe Property 및 Kvi Beach</span><span class="t t-ja">2026年4月1日より1個/日; Wolfe Property・Kvi Beach</span><span class="t t-vi">Giảm xuống 1/ngày từ 1/4/2026; Wolfe Property &amp; Kvi Beach</span></td></tr>
+      <tr><td><strong>Sand Shrimp</strong></td><td><span class="t t-en">None</span><span class="t t-zh">无</span></td><td><span class="ltag">10 lbs/day</span></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Max 2 pots/person; marine-area specific — check WDFW shrimp page</span><span class="t t-zh">最多2虾笼/人；按Marine Area分区查询</span><span class="t t-ko">최대 2개 통발/인; 마린 에어리어별 확인</span><span class="t t-ja">最大2鉢/人; マリンエリア別確認</span><span class="t t-vi">Tối đa 2 bẫy/người; theo khu vực biển</span></td></tr>
+      <tr><td><strong>Dungeness Crab</strong></td><td>6¼" carapace</td><td><span class="ltag">5/day (males)</span></td><td><span class="t t-en">Shellfish + PS endorsement + CRC</span><span class="t t-zh">贝类证 + Puget Sound endorsement + catch record card</span><span class="t t-ko">패류증 + PS 보증서 + CRC</span><span class="t t-ja">貝類証 + PS保証書 + CRC</span><span class="t t-vi">Shellfish + PS endorsement + CRC</span></td><td><span class="t t-en">Puget Sound: males only, hard-shell. MA 10 currently CLOSED — opens summer 2026. Summer ~Jul 1–Sep 5</span><span class="t t-zh">Puget Sound：仅雄性，硬壳。MA 10目前关闭，2026年夏开放。夏季约7/1–9/5</span><span class="t t-ko">Puget Sound: 수컷만, 경질. MA 10 현재 폐쇄, 2026년 여름 개방. 여름 ~7/1–9/5</span><span class="t t-ja">Puget Sound: 雄のみ, 硬甲。MA10現在閉鎖, 2026年夏開放。夏 ~7/1–9/5</span><span class="t t-vi">Puget Sound: chỉ con đực, vỏ cứng. MA 10 đang đóng, mở hè 2026. Hè ~1/7–5/9</span></td></tr>
+      <tr><td><strong>Red Rock Crab</strong></td><td>5" carapace</td><td><span class="ltag">6/day</span></td><td><span class="t t-en">Shellfish license</span><span class="t t-zh">贝类证</span><span class="t t-ko">패류 면허</span><span class="t t-ja">貝類証</span><span class="t t-vi">Giấy phép shellfish</span></td><td><span class="t t-en">Either sex, hard-shell only; no catch record card required</span><span class="t t-zh">公母皆可，仅硬壳；无需catch record card</span><span class="t t-ko">성별 불문, 경질만; CRC 불필요</span><span class="t t-ja">性別不問, 硬甲のみ; CRC不要</span><span class="t t-vi">Cả hai giới, vỏ cứng; không cần CRC</span></td></tr>
+      <tr><td><strong>Squid (Market)</strong></td><td><span class="t t-en">None</span><span class="t t-zh">无</span></td><td><span class="ltag">10 lbs or 5 qt</span></td><td><span class="t t-en">Shellfish/Seaweed</span><span class="t t-zh">贝类证</span><span class="t t-ko">패류증</span><span class="t t-ja">貝類証</span><span class="t t-vi">Shellfish</span></td><td><span class="t t-en">Open year-round; present Sep–Feb at Edmonds, Oct–Jan at Seattle/Bremerton. Max 4 jigs/line. Barbless hooks required.</span><span class="t t-zh">全年开放；9–2月Edmonds有，10–1月Seattle/Bremerton有。每线最多4钩。须用无倒刺钩。</span><span class="t t-ko">연중 개방; Edmonds 9~2월, Seattle/Bremerton 10~1월. 라인당 최대 4지그. 무미늘 바늘 필수.</span><span class="t t-ja">年中開放; Edmonds 9〜2月, Seattle/Bremerton 10〜1月。1ライン最大4ジグ。バーブレスフック必須。</span><span class="t t-vi">Mở quanh năm; Edmonds tháng 9–2, Seattle/Bremerton tháng 10–1. Tối đa 4 mồi/dây. Lưỡi không ngạnh bắt buộc.</span></td></tr>
+      <tr><td><strong>Crayfish (Signal)</strong></td><td>3¼" nose to tail</td><td><span class="ltag">10 lbs/day</span></td><td><span class="t t-en">Fishing license (not shellfish)</span><span class="t t-zh">钓鱼证（非贝类证）</span><span class="t t-ko">낚시 면허(패류 아님)</span><span class="t t-ja">釣り免許(貝類証不要)</span><span class="t t-vi">Giấy phép câu (không phải shellfish)</span></td><td><span class="t t-en">Freshwater; 1st Mon May–Oct 31 (typical); max 5 traps/person. Non-native: no limit, cannot release alive.</span><span class="t t-zh">淡水；5月第一周一–10月31日（典型）；最多5笼/人。外来种：无限额，不得活体放回。</span><span class="t t-ko">민물; 5월 첫째 월요일~10월 31일; 최대 5통발/인. 비원생: 무제한, 생방류 금지.</span><span class="t t-ja">淡水; 5月第1月曜日〜10月31日; 最大5ポット/人。外来種: 制限なし, 生きたまま放流不可。</span><span class="t t-vi">Nước ngọt; T2 đầu tháng 5–31/10; tối đa 5 bẫy/người. Ngoại lai: không giới hạn, không thả sống.</span></td></tr>
+      <tr><td><strong>Blue Mussel</strong></td><td><span class="t t-en">None spec.</span><span class="t t-zh">无规定</span></td><td><span class="ltag">10 lbs/day</span></td><td><span class="t t-en">Shellfish</span><span class="t t-zh">贝类证</span></td><td><span class="t t-en">Subject to DOH biotoxin advisories</span><span class="t t-zh">受DOH生物毒素公告影响</span><span class="t t-ko">DOH 생물독소 권고 적용</span><span class="t t-ja">DOH生物毒素警告対象</span><span class="t t-vi">Theo cảnh báo DOH biotoxin</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="disc">
+    <strong>⚠ <span class="t t-en">Always verify before you go:</span><span class="t t-zh">出发前必须核实：</span><span class="t t-ko">출발 전 반드시 확인:</span><span class="t t-ja">出発前に必ず確認:</span><span class="t t-vi">Luôn xác minh trước khi đi:</span></strong>
+    <span class="t t-en"> ① <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW beach seasons</a> ② <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH Shellfish Safety Map</a> ③ DOH Hotline <strong>1-800-562-5632</strong> ④ WDFW Emergency <strong>866-880-5431</strong> ⑤ <a href="https://wdfw.wa.gov/fishing/shellfishing-regulations/crab" target="_blank">WDFW Crab Seasons</a>. Informational only. Not affiliated with WDFW or the State of Washington.</span>
+    <span class="t t-zh"> ① <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW海滩季节</a> ② <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH贝类安全地图</a> ③ DOH热线 <strong>1-800-562-5632</strong> ④ WDFW紧急热线 <strong>866-880-5431</strong> ⑤ <a href="https://wdfw.wa.gov/fishing/shellfishing-regulations/crab" target="_blank">WDFW螃蟹季节</a>。本站仅提供信息提醒，与WDFW/华盛顿州无关联。</span>
+    <span class="t t-ko"> ① <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW 해변 시즌</a> ② <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH 안전 지도</a> ③ DOH 핫라인 <strong>1-800-562-5632</strong> ④ WDFW 긴급 <strong>866-880-5431</strong> ⑤ <a href="https://wdfw.wa.gov/fishing/shellfishing-regulations/crab" target="_blank">WDFW 게 시즌</a>. 정보 제공 목적 전용. WDFW와 무관.</span>
+    <span class="t t-ja"> ① <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW浜辺シーズン</a> ② <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH安全マップ</a> ③ DOHホットライン <strong>1-800-562-5632</strong> ④ WDFW緊急 <strong>866-880-5431</strong> ⑤ <a href="https://wdfw.wa.gov/fishing/shellfishing-regulations/crab" target="_blank">WDFWカニシーズン</a>。情報提供のみ。WDFWと無関係。</span>
+    <span class="t t-vi"> ① <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">Mùa bãi WDFW</a> ② <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">Bản đồ DOH</a> ③ Đường dây DOH <strong>1-800-562-5632</strong> ④ WDFW Khẩn cấp <strong>866-880-5431</strong> ⑤ <a href="https://wdfw.wa.gov/fishing/shellfishing-regulations/crab" target="_blank">Mùa cua WDFW</a>. Chỉ để cung cấp thông tin. Không liên kết với WDFW.</span>
+  </div>
+
+  <div class="devnote" id="dev-note-zh" style="display:none">
+    <div class="devnote-icon">🐙</div>
+    <div>
+      <h4>后台方案建议（无需VS Code）</h4>
+      <p>
+        <strong>部署方式（无需VS Code）：</strong><br>
+        1. 在 <a href="https://github.com" target="_blank">GitHub.com</a> 注册账户，新建公开仓库<br>
+        2. 直接在浏览器里上传此 HTML 文件，改名为 <code>index.html</code><br>
+        3. Settings → Pages → Source 选 main 分支 → Save<br>
+        4. 访问 <code>https://你的用户名.github.io/仓库名</code><br><br>
+        <strong>订阅数据收集（推荐：Google Forms + Sheets）：</strong><br>
+        • 创建 Google Form，字段：物种、地点、潮汐、出行日、邮箱<br>
+        • 数据自动存入 Google Sheets（免费，无限制）<br>
+        • 未来群发邮件：从 Sheets 导出到 Mailchimp / Brevo（免费层足够）<br>
+        • 或用 Google Apps Script 直接从 Sheets 发邮件（免费，有限额）<br><br>
+        <strong>商业化推荐方案（Railway + Twilio SendGrid）：</strong><br>
+        • Railway 跑 Node.js 脚本：每月 $5，抓 NOAA API + 查 DOH + 发邮件<br>
+        • Twilio SendGrid：免费100封/天，付费后价格极低，支持群发<br>
+        • Twilio 短信：按量付费，适合未来升级到 App 推送<br>
+        • 数据库：Railway 自带 PostgreSQL，或用 Supabase 免费层存订阅者<br><br>
+        <strong>加物种/地点：</strong>只改 JS 的 <code>ALL_SPECIES</code> 和 <code>LOCATIONS</code> 两个数组。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TOXIN / SHELLFISH SAFETY CHECKER
+     ══════════════════════════════════════════════ -->
+<!-- BEACH CARDS -->
+<div class="sw" id="beaches">
+  <div class="slabel">
+    <span class="t t-en">Eight Featured Locations</span><span class="t t-zh">八大热门地点</span>
+    <span class="t t-ko">주요 장소 8곳</span><span class="t t-ja">おすすめの場所8選</span><span class="t t-vi">8 địa điểm nổi bật</span>
+  </div>
+  <h2>
+    <span class="tb tb-en">Where to Harvest in Washington</span>
+    <span class="tb tb-zh">华盛顿州赶海及捕捞地点</span>
+    <span class="tb tb-ko">워싱턴주 수확 장소 안내</span>
+    <span class="tb tb-ja">ワシントン州の採貝・漁スポット</span>
+    <span class="tb tb-vi">Địa điểm thu hoạch tại Washington</span>
+  </h2>
+  <p class="sdesc">
+    <span class="tb tb-en">Season data from <a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW 2026 schedule</a>. Always verify with the <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH Shellfish Safety Map</a> and WDFW crab/squid pages before heading out.</span>
+    <span class="tb tb-zh">季节数据来源：<a href="https://wdfw.wa.gov/places-to-go/shellfish-beaches" target="_blank">WDFW 2026年度季节表</a>。出发前务必核查 <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH贝类安全地图</a> 及WDFW螃蟹/鱿鱼页面。</span>
+    <span class="tb tb-ko"><a href="https://wdfw.wa.gov" target="_blank">WDFW 2026</a> 기반. 출발 전 반드시 <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH 안전 지도</a> 및 WDFW 게/오징어 페이지 확인.</span>
+    <span class="tb tb-ja"><a href="https://wdfw.wa.gov" target="_blank">WDFW 2026</a>に基づく。出発前に必ず<a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH安全マップ</a>とWDFWカニ・イカページを確認。</span>
+    <span class="tb tb-vi">Dữ liệu từ <a href="https://wdfw.wa.gov" target="_blank">WDFW 2026</a>. Luôn kiểm tra <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank">DOH Safety Map</a> và trang WDFW về cua/mực.</span>
+  </p>
+  <div class="bgrid">
+
+    <!-- WOLFE -->
+    <div class="bcard" id="bcard-wolfe">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-wolfe')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🏖️</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Wolfe Property State Park</div>
+            <div class="bloc"><span class="tb tb-en">Hood Canal · Jefferson County · Enhanced Beach</span><span class="tb tb-zh">Hood Canal · Jefferson County · WDFW增殖海滩</span><span class="tb tb-ko">후드 커낼 · 제퍼슨 카운티</span><span class="tb tb-ja">フッド・カナル · ジェファーソン郡</span><span class="tb tb-vi">Hood Canal · Jefferson County</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦪 Oyster</span><span class="bcard-sp-pill">🐚 Manila</span><span class="bcard-sp-pill">🐚 Cockle</span><span class="bcard-sp-pill">🐚 Butter</span><span class="bcard-sp-pill">🐚 Horse</span><span class="bcard-sp-pill">🐚 Geoduck</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s"><span class="t t-en">Seasonal</span><span class="t t-zh">季节性</span><span class="t t-ko">시즌</span><span class="t t-ja">季節限定</span><span class="t t-vi">Theo mùa</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦪 Oyster</span><span class="spd">🐚 Manila Clam</span><span class="spd">🐚 Cockle</span><span class="spd">🐚 Butter Clam</span><span class="spd">🐚 Horse Clam</span><span class="spd">🐚 Geoduck</span></div>
+        <div class="ttip"><strong><span class="t t-en">Tide:</span><span class="t t-zh">潮汐：</span><span class="t t-ko">조수:</span><span class="t t-ja">干潮:</span><span class="t t-vi">Triều:</span></strong>
+          <span class="t t-en"> No extreme low needed — +2 to +3 ft is sufficient. Best area near Seven Sisters Road trail access.</span>
+          <span class="t t-zh"> 不需要极低潮，+2~+3 ft就够。最佳挖蛤区在Seven Sisters Road步道入口前方。</span>
+          <span class="t t-ko"> 극저조위 불필요 — +2~+3ft로 충분. Seven Sisters Road 남쪽이 최적.</span>
+          <span class="t t-ja"> 極干潮不要。+2〜+3ftで十分。Seven Sisters Road南側が最適。</span>
+          <span class="t t-vi"> Không cần triều cực thấp — +2~+3ft là đủ. Khu vực tốt nhất gần Seven Sisters Road.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Manila/Cockle/Butter Clam: min 1½"; Geoduck: 1/day (new 2026)</span><span class="t t-zh">马尼拉贝/鸟贝/黄油哈：最小1½"；象拔蚌：1只/天（2026新规）</span><span class="t t-ko">마닐라/새조개/버터: 최소 1½"; 대합: 1개/일(신규)</span><span class="t t-ja">マニラ/コックル/バター: 最小1½"; ミルクイ: 1個/日(新規)</span><span class="t t-vi">Manila/Cockle/Butter: tối thiểu 1½"; Geoduck: 1/ngày (mới 2026)</span></li>
+          <li><span class="t t-en">Shuck oysters on site; leave shells on beach; refill all holes</span><span class="t t-zh">生蚝就地破壳，壳留在海滩；挖坑必须填回</span><span class="t t-ko">굴 현장에서 까기; 껍데기는 해변에; 구멍 메우기</span><span class="t t-ja">牡蠣は現場で開き殻を残す; 穴を埋める</span><span class="t t-vi">Tách hàu tại chỗ; để vỏ trên bãi; lấp lỗ</span></li>
+          <li><span class="t t-en">Very limited parking — weekdays strongly recommended</span><span class="t t-zh">停车极为有限，强烈建议工作日前往</span><span class="t t-ko">주차 매우 제한 — 평일 강력 권장</span><span class="t t-ja">駐車場は非常に少ない — 平日推奨</span><span class="t t-vi">Rất ít chỗ đỗ xe — nên đi ngày thường</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ 2026 Open: Jan 15 – Apr 15</span><span class="t t-zh">✓ 2026年开放：1月15日–4月15日</span><span class="t t-ko">✓ 2026 오픈: 1/15–4/15</span><span class="t t-ja">✓ 2026年開放: 1月15日〜4月15日</span><span class="t t-vi">✓ Mở 2026: 15/1–15/4</span></span>
+          <div class="snote"><span class="t t-en">⚠ Season shortened (was Jan 1–May 15) due to 2025 overharvesting. DOH may close any day.</span><span class="t t-zh">⚠ 因2025年严重超采被压缩（原1/1–5/15）。DOH随时可能关闭。</span><span class="t t-ko">⚠ 2025년 과다 채취로 단축. DOH는 언제든 닫을 수 있음.</span><span class="t t-ja">⚠ 2025年過剰採取により短縮。DOHはいつでも閉鎖可能。</span><span class="t t-vi">⚠ Mùa bị rút ngắn do khai thác quá mức 2025. DOH có thể đóng bất cứ lúc nào.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWIN HARBORS -->
+    <div class="bcard" id="bcard-twin">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-twin')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🌊</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Twin Harbors Beach</div>
+            <div class="bloc"><span class="tb tb-en">Pacific Coast · Grays Harbor County · Near Westport</span><span class="tb tb-zh">太平洋海岸 · Grays Harbor County · Westport附近</span><span class="tb tb-ko">태평양 해안 · 그레이스 하버 카운티</span><span class="tb tb-ja">太平洋沿岸 · グレイズハーバー郡</span><span class="tb tb-vi">Bờ Thái Bình Dương · Grays Harbor</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🪄 Razor Clam</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s">Oct–May</span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🪄 Razor Clam ★ only species</span></div>
+        <div class="ttip"><strong><span class="t t-en">Tide:</span><span class="t t-zh">潮汐：</span><span class="t t-ko">조수:</span><span class="t t-ja">干潮:</span><span class="t t-vi">Triều:</span></strong>
+          <span class="t t-en"> WDFW announces dig days ~1 week ahead. Dig within 2 hrs of low tide. Lower is better.</span>
+          <span class="t t-zh"> WDFW提前约1周公布挖蛤日。低潮点起2小时内可挖，越低越好。</span>
+          <span class="t t-ko"> WDFW가 약 1주일 전 날짜 공지. 간조 후 2시간 내 채취. 낮을수록 좋음.</span>
+          <span class="t t-ja"> 約1週間前にWDFWが日程公表。干潮後2時間以内に採取。低いほど良い。</span>
+          <span class="t t-vi"> WDFW thông báo ~1 tuần trước. Đào trong 2 giờ sau triều thấp. Càng thấp càng tốt.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Daily limit: 15 razor clams — keep first 15 dug regardless of size</span><span class="t t-zh">每人每天15只刀蛤，挖出前15只必须全部保留</span><span class="t t-ko">일일 한도: 15마리 — 처음 15마리 크기 불문 보관</span><span class="t t-ja">日量: 15個 — 最初の15個は必ず保持</span><span class="t t-vi">Giới hạn: 15 ngao/ngày — giữ 15 con đầu tiên</span></li>
+          <li><span class="t t-en">Separate container per digger; license required age 16+; DOH domoic acid test required</span><span class="t t-zh">每人独立容器；16岁+需捕捞证；须通过DOH domoic acid检测</span><span class="t t-ko">별도 용기 필수; 16세 이상 면허; DOH 도모산 테스트 통과 필요</span><span class="t t-ja">各人専用容器; 16歳以上ライセンス; DOHドウモイ酸検査必須</span><span class="t t-vi">Mỗi người một thùng; cần giấy phép từ 16 tuổi; DOH domoic acid test</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Typical: October – early May (specific days announced)</span><span class="t t-zh">✓ 典型季节：10月–次年5月（具体日期公布）</span><span class="t t-ko">✓ 일반: 10월~5월 초 (날짜 공지)</span><span class="t t-ja">✓ 一般: 10月〜5月初旬（日程公表）</span><span class="t t-vi">✓ Thông thường: Tháng 10 – đầu tháng 5</span></span>
+          <div class="snote"><span class="t t-en">⚠ Not continuous. 2025–26: Oct 6–May 6 (103 harvest days). 2026–27 announced in fall.</span><span class="t t-zh">⚠ 非连续开放。2025–26季：10/6–5/6，共103收获日。2026–27秋季公布。</span><span class="t t-ko">⚠ 비연속. 2025–26: 10/6–5/6 (103일). 2026–27 가을 공지.</span><span class="t t-ja">⚠ 非連続。2025–26: 10/6–5/6（103日）。2026–27は秋に公表。</span><span class="t t-vi">⚠ Không liên tục. 2025–26: 6/10–6/5 (103 ngày). 2026–27 thông báo mùa thu.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LUHR BEACH -->
+    <div class="bcard" id="bcard-luhr">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-luhr')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">⚓</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Luhr Beach Boat Launch</div>
+            <div class="bloc"><span class="tb tb-en">Nisqually Delta · Thurston County · South Puget Sound</span><span class="tb tb-zh">Nisqually Delta · Thurston County · South Puget Sound</span><span class="tb tb-ko">니스콸리 델타 · 서스턴 카운티</span><span class="tb tb-ja">ニスクアリー・デルタ · サーストン郡</span><span class="tb tb-vi">Nisqually Delta · Thurston County</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦪 Oyster</span><span class="bcard-sp-pill">🐚 Manila</span><span class="bcard-sp-pill">🐚 Horse</span><span class="bcard-sp-pill">🦐 Sand Shrimp</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-o"><span class="t t-en">Check DOH</span><span class="t t-zh">查DOH</span><span class="t t-ko">DOH 확인</span><span class="t t-ja">DOH確認</span><span class="t t-vi">Kiểm tra DOH</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦪 Oyster</span><span class="spd">🐚 Manila Clam</span><span class="spd">🐚 Horse Clam</span><span class="spd">🦐 Sand Shrimp</span></div>
+        <div class="ttip"><strong><span class="t t-en">Tide:</span><span class="t t-zh">潮汐：</span><span class="t t-ko">조수:</span><span class="t t-ja">干潮:</span><span class="t t-vi">Triều:</span></strong>
+          <span class="t t-en"> Nisqually tidal flats extend far. Below +1.0 ft gives best shellfish access. WDFW Discover Pass required for parking.</span>
+          <span class="t t-zh"> Nisqually泥滩广阔，+1.0 ft以下贝类暴露最充分。停车需WDFW Discover Pass。</span>
+          <span class="t t-ko"> 니스콸리 갯벌 광활. +1.0ft 이하 최적. 주차에 Discover Pass 필요.</span>
+          <span class="t t-ja"> ニスクアリー干潟は広大。+1.0ft以下が最適。Discover Pass必要。</span>
+          <span class="t t-vi"> Bãi triều Nisqually rộng. Dưới +1.0ft tốt nhất. Cần Discover Pass đỗ xe.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Manila Clam: min 1½"; Oysters: shuck on site, leave shells</span><span class="t t-zh">马尼拉贝最小1½"；生蚝就地破壳，壳留原地</span><span class="t t-ko">마닐라 조개: 최소 1½"; 굴: 현장에서 까기</span><span class="t t-ja">マニラガイ: 最小1½"; 牡蠣: 現場で開き殻を残す</span><span class="t t-vi">Ngao Manila: tối thiểu 1½"; Hàu: tách tại chỗ</span></li>
+          <li><span class="t t-en">Sand Shrimp: 10 lbs/day (heads on), max 2 pots/person</span><span class="t t-zh">沙虾：10磅/天（带头），最多2个虾笼/人</span><span class="t t-ko">모래 새우: 10파운드/일(머리 포함), 최대 2개 통발</span><span class="t t-ja">サンドシュリンプ: 10ポンド/日(頭付き), 最大2鉢</span><span class="t t-vi">Tôm Cát: 10 lbs/ngày (đầu còn), tối đa 2 bẫy</span></li>
+          <li><span class="t t-en">⚠ Adjacent Nisqually NWR is closed year-round — do not confuse</span><span class="t t-zh">⚠ 紧邻的Nisqually国家野生动物保护区全年禁捕，勿混淆</span><span class="t t-ko">⚠ 인접 NWR 연중 폐쇄 — 혼동 주의</span><span class="t t-ja">⚠ 隣接NWRは年中閉鎖 — 混同注意</span><span class="t t-vi">⚠ NWR kề bên đóng cửa quanh năm — đừng nhầm</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Year-round in principle*</span><span class="t t-zh">✓ 理论上全年开放*</span></span>
+          <div class="snote"><span class="t t-en">*Requires DOH daily clearance. Shrimp: check Marine Area 13. WDFW: 360-902-2700</span><span class="t t-zh">*须每日DOH状态确认。沙虾查Marine Area 13。WDFW: 360-902-2700</span><span class="t t-ko">*DOH 매일 확인 필요. 새우: Marine Area 13 확인. WDFW: 360-902-2700</span><span class="t t-ja">*DOH毎日確認必要。エビ: Marine Area 13確認。WDFW: 360-902-2700</span><span class="t t-vi">*Cần xác nhận DOH hàng ngày. Tôm: xem Marine Area 13. WDFW: 360-902-2700</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BREMERTON MARINA -->
+    <div class="bcard" id="bcard-bremerton">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-bremerton')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🦀</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Bremerton Marina</div>
+            <div class="bloc"><span class="tb tb-en">Marine Area 10 · Kitsap County · Seattle-Bremerton</span><span class="tb tb-zh">Marine Area 10 · Kitsap County · Seattle-Bremerton区</span><span class="tb tb-ko">마린 에어리어 10 · 키트샙 카운티</span><span class="tb tb-ja">マリンエリア10 · キットサップ郡</span><span class="tb tb-vi">Marine Area 10 · Kitsap County</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦀 Dungeness</span><span class="bcard-sp-pill">🦀 Red Rock</span><span class="bcard-sp-pill">🦑 Squid</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s"><span class="t t-en">Seasonal</span><span class="t t-zh">季节性</span><span class="t t-ko">시즌</span><span class="t t-ja">季節限定</span><span class="t t-vi">Theo mùa</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦀 Dungeness Crab</span><span class="spd">🦀 Red Rock Crab</span><span class="spd">🦑 Squid (winter)</span></div>
+        <div class="ttip"><strong><span class="t t-en">Note:</span><span class="t t-zh">注意：</span><span class="t t-ko">참고:</span><span class="t t-ja">注意:</span><span class="t t-vi">Lưu ý:</span></strong>
+          <span class="t t-en"> PSNS waters within 150 ft of the pier head line are closed to fishing at all times. Crabbing is by pot or ring net from shore/pier.</span>
+          <span class="t t-zh"> 海军造船所码头150英尺内全年禁止捕鱼。螃蟹用笼或环网从岸/码头钓捞。</span>
+          <span class="t t-ko"> 해군 조선소 부두 150피트 이내 항시 금지. 게는 통발 또는 링 넷 사용.</span>
+          <span class="t t-ja"> 海軍造船所の桟橋150フィート以内は常時禁漁。カニはポットまたはリングネットで。</span>
+          <span class="t t-vi"> Khu vực 150ft quanh cầu tàu Hải quân luôn đóng cửa. Bẫy cua bằng lồng hoặc vòng lưới.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Dungeness: 5/day, males only, min 6¼" hard-shell; Puget Sound endorsement + catch record card required</span><span class="t t-zh">邓杰内斯蟹：5只/天，仅雄性，最小6¼"硬壳；需Puget Sound endorsement + catch record card</span><span class="t t-ko">던지니스: 5마리/일, 수컷만, 최소 6¼" 경질; PS 보증서 + CRC 필요</span><span class="t t-ja">ダンジネス: 5匹/日, 雄のみ, 最小6¼" 硬甲; PS保証書+CRC必要</span><span class="t t-vi">Dungeness: 5/ngày, đực only, ≥6¼" vỏ cứng; PS endorsement + CRC</span></li>
+          <li><span class="t t-en">Red Rock Crab: 6/day, either sex, min 5" hard-shell</span><span class="t t-zh">红石蟹：6只/天，公母皆可，最小5"硬壳</span><span class="t t-ko">레드록: 6마리/일, 성별 불문, 최소 5" 경질</span><span class="t t-ja">レッドロック: 6匹/日, 性別不問, 最小5" 硬甲</span><span class="t t-vi">Red Rock: 6/ngày, cả hai giới, ≥5" vỏ cứng</span></li>
+          <li><span class="t t-en">Squid: 10 lbs or 5 qt/day; up to 4 jigs/line; best at night under lights Sep–Feb</span><span class="t t-zh">鱿鱼：10磅或5夸脱/天；每线最多4钩；9–2月夜间灯光下最佳</span><span class="t t-ko">오징어: 10파운드/5쿼트 일; 라인당 최대 4지그; 9~2월 야간 조명 최적</span><span class="t t-ja">イカ: 10ポンド/5クォート/日; 1ライン最大4ジグ; 9〜2月夜間が最適</span><span class="t t-vi">Mực: 10 lbs/5 qt/ngày; tối đa 4 mồi/dây; tốt nhất đêm tháng 9–2</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Crab summer ~Jul 1–Sep 5; Squid Sep–Feb</span><span class="t t-zh">✓ 螃蟹夏季约7/1–9/5；鱿鱼9–2月</span></span>
+          <div class="snote"><span class="t t-en">⚠ MA 10 crab CLOSED now — opens summer 2026. Always verify WDFW crab page.</span><span class="t t-zh">⚠ MA 10螃蟹目前关闭，2026夏开放。出发前查WDFW螃蟹季节页面。</span><span class="t t-ko">⚠ MA 10 게 현재 폐쇄, 2026년 여름 개방. WDFW 확인 필수.</span><span class="t t-ja">⚠ MA10カニ現在閉鎖, 2026年夏開放。必ずWDFWで確認。</span><span class="t t-vi">⚠ MA 10 cua đang đóng, mở hè 2026. Luôn kiểm tra WDFW.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDMONDS PIER -->
+    <div class="bcard" id="bcard-edmonds">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-edmonds')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🦑</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Edmonds Public Fishing Pier</div>
+            <div class="bloc"><span class="tb tb-en">Marine Area 8-2 · Snohomish County · Squid prime</span><span class="tb tb-zh">Marine Area 8-2 · Snohomish County · 鱿鱼首选</span><span class="tb tb-ko">마린 에어리어 8-2 · 스노호미시 카운티</span><span class="tb tb-ja">マリンエリア8-2 · スノホミッシュ郡</span><span class="tb tb-vi">Marine Area 8-2 · Snohomish County</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦀 Dungeness</span><span class="bcard-sp-pill">🦀 Red Rock</span><span class="bcard-sp-pill">🦑 Squid ★</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s"><span class="t t-en">Seasonal</span><span class="t t-zh">季节性</span><span class="t t-ko">시즌</span><span class="t t-ja">季節限定</span><span class="t t-vi">Theo mùa</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦀 Dungeness Crab</span><span class="spd">🦀 Red Rock Crab</span><span class="spd">🦑 Squid ★ prime spot</span></div>
+        <div class="ttip"><strong><span class="t t-en">Squid tip:</span><span class="t t-zh">鱿鱼提示：</span><span class="t t-ko">오징어 팁:</span><span class="t t-ja">イカのヒント:</span><span class="t t-vi">Mẹo câu mực:</span></strong>
+          <span class="t t-en"> Edmonds is one of the first Puget Sound piers where squid arrive each fall (around September). Night fishing under pier lights is most productive.</span>
+          <span class="t t-zh"> Edmonds是鱿鱼每年秋季最早到达的Puget Sound码头之一（约9月）。夜间在码头灯光下钓效果最好。</span>
+          <span class="t t-ko"> Edmonds는 매년 가을 오징어가 가장 먼저 도착하는 Puget Sound 부두 중 하나(약 9월). 야간 조명 아래 최고.</span>
+          <span class="t t-ja"> Edmondsはプジェットサウンドでイカがいち早く回遊する桟橋(約9月)。夜間照明下が最高。</span>
+          <span class="t t-vi"> Edmonds là một trong những cầu tàu Puget Sound đầu tiên mực đến mỗi mùa thu (khoảng tháng 9). Câu ban đêm dưới đèn hiệu quả nhất.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Same crab rules as Bremerton; barbless hooks required for all Puget Sound fisheries</span><span class="t t-zh">螃蟹规定同Bremerton；Puget Sound所有渔业须用无倒刺钩</span><span class="t t-ko">게 규정은 브레머턴과 동일; Puget Sound 무미늘 바늘 필수</span><span class="t t-ja">カニ規則はブレマートンと同じ; バーブレスフック必須</span><span class="t t-vi">Quy tắc cua như Bremerton; lưỡi câu không ngạnh bắt buộc</span></li>
+          <li><span class="t t-en">Up to 4 squid jigs per line; no minimum size for squid</span><span class="t t-zh">每根线最多4个鱿鱼钩；鱿鱼无最小尺寸要求</span><span class="t t-ko">라인당 최대 4개 오징어 지그; 최소 크기 없음</span><span class="t t-ja">1ライン最大4イカジグ; 最小サイズなし</span><span class="t t-vi">Tối đa 4 mồi mực/dây; không có kích thước tối thiểu</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Squid: Sep–Feb (peak Oct–Jan). Crab: summer ~Jul 1–Sep 5</span><span class="t t-zh">✓ 鱿鱼：9–2月（高峰10–1月）。螃蟹：夏季约7/1–9/5</span></span>
+          <div class="snote"><span class="t t-en">⚠ Squid is open year-round statewide; actual presence depends on migration. Check local reports.</span><span class="t t-zh">⚠ 鱿鱼全年开放，但实际出现取决于迁徙规律。出发前查当地钓鱼报告。</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEATTLE PIER 62 -->
+    <div class="bcard" id="bcard-pier62">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-pier62')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🌃</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Seattle Pier 62</div>
+            <div class="bloc"><span class="tb tb-en">Marine Area 10 · King County · Elliott Bay</span><span class="tb tb-zh">Marine Area 10 · King County · Elliott Bay海滨</span><span class="tb tb-ko">마린 에어리어 10 · 킹 카운티 · 엘리엇 베이</span><span class="tb tb-ja">マリンエリア10 · キング郡 · エリオットベイ</span><span class="tb tb-vi">Marine Area 10 · King County · Elliott Bay</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦀 Dungeness</span><span class="bcard-sp-pill">🦀 Red Rock</span><span class="bcard-sp-pill">🦑 Squid</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s"><span class="t t-en">Seasonal</span><span class="t t-zh">季节性</span><span class="t t-ko">시즌</span><span class="t t-ja">季節限定</span><span class="t t-vi">Theo mùa</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦀 Dungeness Crab</span><span class="spd">🦀 Red Rock Crab</span><span class="spd">🦑 Squid (Oct–Jan)</span></div>
+        <div class="ttip"><strong><span class="t t-en">Note:</span><span class="t t-zh">注意：</span><span class="t t-ko">참고:</span><span class="t t-ja">注意:</span><span class="t t-vi">Lưu ý:</span></strong>
+          <span class="t t-en"> Waters within 100 yards of Elliott Bay Public Fishing Pier are closed to shellfish harvest except when fishing from the pier. East Elliott Bay has specific closure zones.</span>
+          <span class="t t-zh"> Elliott Bay公共钓鱼码头100码内水域禁止采集贝类，但从码头钓捞除外。East Elliott Bay有特定关闭区域。</span>
+          <span class="t t-ko"> Elliott Bay 공공 낚시 부두 100야드 이내는 부두 낚시 시에만 패류 채취 가능.</span>
+          <span class="t t-ja"> エリオットベイ公共釣り桟橋100ヤード以内は桟橋からの釣りのみ貝類採取可能。</span>
+          <span class="t t-vi"> Trong 100 yards quanh cầu tàu Elliott Bay chỉ được thu hoạch khi câu từ cầu.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Dungeness: 5/day males only, hard-shell ≥6¼"; Red Rock: 6/day, either sex, ≥5"</span><span class="t t-zh">邓杰内斯：5只/天雄性硬壳≥6¼"；红石蟹：6只/天公母皆可≥5"</span></li>
+          <li><span class="t t-en">Squid arrive Oct–Nov, linger through Jan; Puget Sound Dungeness endorsement + CRC required</span><span class="t t-zh">鱿鱼10–11月到达，持续至1月；需Puget Sound endorsement + CRC</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Crab: summer ~Jul 1–Sep 5 + limited winter. Squid: Oct–Jan prime</span><span class="t t-zh">✓ 螃蟹：夏季约7/1–9/5 + 冬季有限配额。鱿鱼：10–1月为高峰</span></span>
+          <div class="snote"><span class="t t-en">⚠ MA 10 crab currently CLOSED — opens summer 2026. Always verify WDFW crab seasons page.</span><span class="t t-zh">⚠ MA 10螃蟹目前关闭，2026夏开放。务必查WDFW螃蟹季节页面。</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RATTLESNAKE LAKE -->
+    <div class="bcard" id="bcard-rattlesnake">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-rattlesnake')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🦞</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Rattlesnake Lake</div>
+            <div class="bloc"><span class="tb tb-en">King County · SE of North Bend · Freshwater Lake</span><span class="tb tb-zh">King County · North Bend东南 · 淡水湖</span><span class="tb tb-ko">킹 카운티 · 노스 벤드 남동쪽 · 민물</span><span class="tb tb-ja">キング郡 · ノースベンド南東 · 淡水</span><span class="tb tb-vi">King County · Đông Nam North Bend · Nước ngọt</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🦞 Crayfish</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-s">May–Oct</span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🦞 Crayfish / Signal Crayfish</span></div>
+        <div class="ttip"><strong><span class="t t-en">Note:</span><span class="t t-zh">注意：</span><span class="t t-ko">참고:</span><span class="t t-ja">注意:</span><span class="t t-vi">Lưu ý:</span></strong>
+          <span class="t t-en"> Freshwater lake — no tide requirement. Crayfish most active when water temps above 50°F. Set traps in 3–15 ft near rocky or weedy areas.</span>
+          <span class="t t-zh"> 淡水湖，无潮汐要求。水温超过50°F时小龙虾最活跃。在靠近礁石或水草的3–15英尺水深处放置笼具效果最好。</span>
+          <span class="t t-ko"> 민물 호수 — 조수 조건 없음. 수온 50°F 이상인 여름에 가장 활발. 바위나 수초 근처 3~15피트에 통발 효과적.</span>
+          <span class="t t-ja"> 淡水湖 — 潮位不要。水温50°F以上の夏に最も活発。岩場や水草近くの3〜15フィートにポット設置。</span>
+          <span class="t t-vi"> Hồ nước ngọt — không cần triều. Tôm đồng hoạt động nhiều nhất khi nước trên 50°F. Đặt bẫy 3–15 feet gần đá hoặc cỏ nước.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Signal Crayfish: min 3¼" nose to tail; 10 lbs/day; max 5 traps/person</span><span class="t t-zh">Signal小龙虾：最小3¼"；10磅/人/天；最多5个笼具/人</span><span class="t t-ko">시그널 가재: 최소 3¼"; 10파운드/일; 최대 5통발</span><span class="t t-ja">シグナルザリガニ: 最小3¼"; 10ポンド/日; 最大5ポット</span><span class="t t-vi">Signal Crayfish: tối thiểu 3¼"; 10 lbs/ngày; tối đa 5 bẫy</span></li>
+          <li><span class="t t-en">Non-native crayfish: no size limit, no daily limit — must NOT be returned alive</span><span class="t t-zh">外来入侵种：无限额，不得活体放回水中</span><span class="t t-ko">비원생: 제한 없음 — 생방류 금지</span><span class="t t-ja">外来種: 制限なし — 生きたまま放流不可</span><span class="t t-vi">Ngoại lai: không giới hạn — không thả sống</span></li>
+          <li><span class="t t-en">Fishing license required (since June 6, 2024); buoys must be marked with full name &amp; address</span><span class="t t-zh">需持有钓鱼证（自2024年6月6日起）；浮标须标注姓名和地址</span><span class="t t-ko">낚시 면허 필요(2024/6/6~); 부이에 성명·주소 기재 필수</span><span class="t t-ja">釣り免許必要(2024/6/6~); ブイに氏名・住所記載必須</span><span class="t t-vi">Cần giấy phép câu (từ 6/6/2024); phao ghi rõ họ tên và địa chỉ</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Typical season: 1st Monday of May – October 31</span><span class="t t-zh">✓ 典型季节：五月第一个周一至10月31日</span></span>
+          <div class="snote"><span class="t t-en">⚠ Verify Rattlesnake Lake is open for crayfish with WDFW before visiting. Discover Pass required for parking. No Shellfish license needed — regular fishing license sufficient.</span><span class="t t-zh">⚠ 出发前向WDFW核实开放状态。停车需Discover Pass。不需要贝类证，普通钓鱼证即可。</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KVI BEACH -->
+    <div class="bcard" id="bcard-kvi">
+      <button class="bcard-toggle" onclick="toggleCard('bcard-kvi')" type="button">
+        <div class="bcard-toggle-left">
+          <span class="bcard-toggle-icon">🐚</span>
+          <div class="bcard-toggle-text">
+            <div class="bname">Kvi Beach</div>
+            <div class="bloc"><span class="tb tb-en">Puget Sound · Kitsap County · Geoduck & Shellfish</span><span class="tb tb-zh">Puget Sound · Kitsap County · 象拔蚌/贝类</span><span class="tb tb-ko">퓨젯 사운드 · 키트샙 카운티</span><span class="tb tb-ja">ピュジェットサウンド · キットサップ郡</span><span class="tb tb-vi">Puget Sound · Kitsap County</span></div>
+            <div class="bcard-sp-preview"><span class="bcard-sp-pill">🐚 Geoduck ★</span><span class="bcard-sp-pill">🐚 Cockle</span><span class="bcard-sp-pill">🐚 Butter</span><span class="bcard-sp-pill">🐚 Horse</span></div>
+          </div>
+        </div>
+        <div class="bcard-toggle-right">
+          <span class="bdg bdg-o"><span class="t t-en">Check DOH</span><span class="t t-zh">查DOH</span><span class="t t-ko">DOH 확인</span><span class="t t-ja">DOH確認</span><span class="t t-vi">Kiểm tra DOH</span></span>
+          <span class="bchevron">▼</span>
+        </div>
+      </button>
+      <div class="bcard-body">
+        <div class="spdis"><span class="spd">🐚 Geoduck ★</span><span class="spd">🐚 Cockle</span><span class="spd">🐚 Butter Clam</span><span class="spd">🐚 Horse Clam</span></div>
+        <div class="ttip"><strong><span class="t t-en">Tide:</span><span class="t t-zh">潮汐：</span><span class="t t-ko">조수:</span><span class="t t-ja">干潮:</span><span class="t t-vi">Triều:</span></strong>
+          <span class="t t-en"> Geoduck requires extreme low tides (below -1.0 ft). Cockle, Butter, and Horse Clam accessible at 0 to +1.0 ft. Check DOH before every visit.</span>
+          <span class="t t-zh"> 象拔蚌需极低潮（-1.0 ft以下）。鸟贝、黄油哈、马蚌在0~+1.0 ft可采。每次出发前查DOH安全地图。</span>
+          <span class="t t-ko"> 대합은 극저조(-1.0ft 이하) 필요. 새조개·버터·말조개는 0~+1.0ft 가능. 매번 DOH 확인 필수.</span>
+          <span class="t t-ja"> ミルクイは極干潮(-1.0ft以下)必要。コックル・バター・ホースは0〜+1.0ftで採取可。毎回DOH確認必須。</span>
+          <span class="t t-vi"> Geoduck cần triều cực thấp (dưới -1.0ft). Cockle, Butter, Horse Clam ở 0~+1.0ft. Kiểm tra DOH trước mỗi lần đi.</span>
+        </div>
+        <ul class="rlist">
+          <li><span class="t t-en">Geoduck: 1/day (2026 new limit)</span><span class="t t-zh">象拔蚌：1只/天（2026新规）</span><span class="t t-ko">대합: 1개/일(2026 신규)</span><span class="t t-ja">ミルクイ: 1個/日(2026新規)</span><span class="t t-vi">Geoduck: 1/ngày (2026 mới)</span></li>
+          <li><span class="t t-en">Cockle / Butter Clam / Horse Clam: min 1½"; Shellfish/Seaweed license required</span><span class="t t-zh">鸟贝/黄油哈/马蚌：最小1½"；需贝类证</span><span class="t t-ko">새조개/버터/말조개: 최소 1½"; 패류 면허 필요</span><span class="t t-ja">コックル/バター/ホース: 最小1½"; 貝類証必要</span><span class="t t-vi">Cockle/Butter/Horse: tối thiểu 1½"; cần giấy phép shellfish</span></li>
+          <li><span class="t t-en">⚠ ALWAYS check DOH Shellfish Safety Map — biotoxin closures possible year-round</span><span class="t t-zh">⚠ 每次出发前必查DOH贝类安全地图——全年随时可能因毒素关闭</span><span class="t t-ko">⚠ 항상 DOH 안전 지도 확인 — 연중 생물독소 폐쇄 가능</span><span class="t t-ja">⚠ 毎回DOH安全マップ確認必須 — 年中生物毒素閉鎖あり得る</span><span class="t t-vi">⚠ LUÔN kiểm tra bản đồ DOH — đóng cửa biotoxin có thể bất cứ lúc nào</span></li>
+        </ul>
+        <div class="sfoot">
+          <span class="sopen"><span class="t t-en">✓ Year-round in principle (subject to DOH daily status)</span><span class="t t-zh">✓ 理论全年开放（须每日确认DOH状态）</span></span>
+          <div class="snote"><span class="t t-en">⚠ DOH closures are common here. Verify at <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank" style="color:inherit">DOH Safety Map</a> every time. WDFW: 360-902-2700</span><span class="t t-zh">⚠ 此地DOH关闭较频繁。每次出发前查 <a href="https://fortress.wa.gov/doh/biotoxin/biotoxin.html" target="_blank" style="color:inherit">DOH安全地图</a>。WDFW: 360-902-2700</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /bgrid -->
+
+
+<div class="msgboard-section" id="suggest">
+  <div class="msgboard-inner">
+    <div class="slabel">
+      <span class="t t-en">Community</span><span class="t t-zh">社区留言</span>
+      <span class="t t-ko">커뮤니티</span><span class="t t-ja">コミュニティ</span><span class="t t-vi">Cộng đồng</span>
+    </div>
+    <h2>
+      <span class="tb tb-en">Suggest a Species or Location</span>
+      <span class="tb tb-zh">建议新物种或新地点</span>
+      <span class="tb tb-ko">종 또는 장소 제안하기</span>
+      <span class="tb tb-ja">種類または場所を提案する</span>
+      <span class="tb tb-vi">Đề xuất loài hoặc địa điểm mới</span>
+    </h2>
+    <div class="msg-intro">
+      <strong><span class="t t-en">📋 How it works:</span><span class="t t-zh">📋 流程说明：</span><span class="t t-ko">📋 진행 방식:</span><span class="t t-ja">📋 仕組み:</span><span class="t t-vi">📋 Cách thức:</span></strong>
+      <span class="t t-en"> Submit your suggestion below. Our team reviews every submission for accuracy against WDFW regulations and DOH safety status. Verified species and locations will be added to TideHarvest and become available for alert subscriptions. We typically review within 7–14 days.</span>
+      <span class="t t-zh"> 在下方提交你的建议。我们团队会根据WDFW规定和DOH安全状态核实每一条提交内容。经核实的物种和地点将被加入TideHarvest，并可纳入提醒订阅。审核通常需要7–14天。</span>
+      <span class="t t-ko"> 아래에 제안을 제출하세요. 팀이 WDFW 규정과 DOH 안전 상태에 따라 모든 제출 내용을 검토합니다. 검증된 종과 장소는 TideHarvest에 추가되어 알림 구독에 사용할 수 있습니다. 검토는 7~14일 소요됩니다.</span>
+      <span class="t t-ja"> 以下からご提案ください。チームがWDFW規則とDOH安全状況に基づいて全提出内容を検証します。確認された種や場所はTideHarvestに追加され、アラート登録に利用可能になります。通常7〜14日以内に審査します。</span>
+      <span class="t t-vi"> Gửi đề xuất của bạn bên dưới. Nhóm chúng tôi xem xét từng đề xuất theo quy định WDFW và trạng thái an toàn DOH. Loài và địa điểm được xác minh sẽ được thêm vào TideHarvest và có thể đăng ký nhận cảnh báo. Thông thường chúng tôi xem xét trong 7–14 ngày.</span>
+    </div>
+
+    <div class="msg-form-wrap">
+      <h4>
+        <span class="t t-en">📝 Submit a Suggestion</span><span class="t t-zh">📝 提交建议</span>
+        <span class="t t-ko">📝 제안 제출</span><span class="t t-ja">📝 提案を送る</span><span class="t t-vi">📝 Gửi đề xuất</span>
+      </h4>
+      <form id="suggestForm" onsubmit="handleSuggestSubmit(event)" novalidate>
+        <div class="msg-field">
+          <label class="msg-label" for="sug-type">
+            <span class="t t-en">Suggestion Type</span><span class="t t-zh">建议类型</span>
+            <span class="t t-ko">제안 유형</span><span class="t t-ja">提案タイプ</span><span class="t t-vi">Loại đề xuất</span>
+          </label>
+          <select class="msg-select" id="sug-type">
+          </select>
+        </div>
+        <div class="msg-field">
+          <label class="msg-label" for="sug-name">
+            <span class="t t-en">Species / Location Name</span><span class="t t-zh">物种/地点名称</span>
+            <span class="t t-ko">종/장소 이름</span><span class="t t-ja">種類/場所名</span><span class="t t-vi">Tên loài/địa điểm</span>
+          </label>
+          <input type="text" id="sug-name" class="msg-input" placeholder="e.g. Olympia Oyster — Dosewallips State Park">
+        </div>
+        <div class="msg-field">
+          <label class="msg-label" for="sug-details">
+            <span class="t t-en">Details (what, where, season, regulations you know)</span>
+            <span class="t t-zh">详情（物种/地点/季节/你知道的规定）</span>
+            <span class="t t-ko">세부사항 (종, 장소, 시즌, 알고 있는 규정)</span>
+            <span class="t t-ja">詳細（種類・場所・シーズン・知っている規則）</span>
+            <span class="t t-vi">Chi tiết (loài, địa điểm, mùa, quy định bạn biết)</span>
+          </label>
+          <textarea id="sug-details" class="msg-input" rows="4" placeholder="Share what you know — WDFW beach name, species available, typical season, any license requirements..."></textarea>
+        </div>
+        <div class="msg-field">
+          <label class="msg-label" for="sug-email">
+            <span class="t t-en">Your Email (optional — for follow-up)</span>
+            <span class="t t-zh">你的邮箱（可选，用于跟进回复）</span>
+            <span class="t t-ko">이메일 (선택 — 추가 문의용)</span>
+            <span class="t t-ja">メール（任意 — フォローアップ用）</span>
+            <span class="t t-vi">Email của bạn (tùy chọn — để phản hồi)</span>
+          </label>
+          <input type="email" id="sug-email" class="msg-input" placeholder="your@email.com (optional)">
+        </div>
+        <button type="submit" class="msg-submit">
+          <span class="t t-en">Send Suggestion →</span><span class="t t-zh">提交建议 →</span>
+          <span class="t t-ko">제안 보내기 →</span><span class="t t-ja">提案を送る →</span><span class="t t-vi">Gửi đề xuất →</span>
+        </button>
+      </form>
+      <div class="msg-success" id="sug-success">
+        ✅ <span class="t t-en">Thank you! We'll review your suggestion and add verified info to TideHarvest within 7–14 days.</span>
+        <span class="t t-zh">感谢！我们将在7–14天内核实你的建议，通过后加入TideHarvest。</span>
+        <span class="t t-ko">감사합니다! 7~14일 내로 제안을 검토하고 TideHarvest에 추가합니다.</span>
+        <span class="t t-ja">ありがとうございます！7〜14日以内に提案を確認してTideHarvestに追加します。</span>
+        <span class="t t-vi">Cảm ơn bạn! Chúng tôi sẽ xem xét đề xuất và thêm thông tin đã xác minh vào TideHarvest trong 7–14 ngày.</span>
+      </div>
+      <p class="msg-note">
+        <span class="t t-en">⚠ All submissions are reviewed for accuracy before being added. Only species and locations verified against official WDFW and DOH data will be included. Submissions become the property of TideHarvest for editorial purposes.</span>
+        <span class="t t-zh">⚠ 所有提交内容在加入前经过准确性审核。仅核实与WDFW和DOH官方数据一致的物种和地点才会加入。提交内容归TideHarvest编辑使用。</span>
+        <span class="t t-ko">⚠ 모든 제출은 추가 전 정확성 검토를 거칩니다. WDFW 및 DOH 공식 데이터에서 확인된 종 및 장소만 포함됩니다.</span>
+        <span class="t t-ja">⚠ 全提出は追加前に正確性を確認します。WDFW・DOH公式データで確認された種・場所のみ掲載。</span>
+        <span class="t t-vi">⚠ Tất cả đề xuất được xem xét trước khi thêm. Chỉ loài và địa điểm đã xác minh với WDFW và DOH mới được đưa vào.</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <strong>TideHarvest</strong> — Washington State Shellfish &amp; Fishing Alerts<br>
+  <a href="https://wdfw.wa.gov" target="_blank">WDFW</a> · <a href="https://doh.wa.gov" target="_blank">WA Dept of Health</a> · NOAA Tides<br>
+  <small style="opacity:.6">
+    <span class="t t-en">Informational alerts only. Not affiliated with WDFW or the State of Washington.</span>
+    <span class="t t-zh">本站仅提供信息提醒，非官方机构。赶海前请务必核查官方数据。</span>
+    <span class="t t-ko">정보 제공 목적 전용. WDFW 또는 워싱턴 주와 무관합니다.</span>
+    <span class="t t-ja">情報提供のみ。WDFWまたはワシントン州とは無関係です。</span>
+    <span class="t t-vi">Chỉ để cung cấp thông tin. Không liên kết với WDFW hoặc Tiểu bang Washington.</span>
+  </small>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal">
+  <div class="modal">
+    <div style="font-size:2.5rem;margin-bottom:.5rem">🐚</div>
+    <h3>
+      <span class="t t-en">You're subscribed!</span><span class="t t-zh">订阅成功！</span>
+      <span class="t t-ko">구독 완료!</span><span class="t t-ja">登録完了!</span><span class="t t-vi">Đăng ký thành công!</span>
+    </h3>
+    <p>
+      <span class="t t-en">We'll email you 3–5 days before the next harvest window that matches all your preferences.</span>
+      <span class="t t-zh">当季节开放、潮汐合适、又是你选的出行日时，我们会提前3–5天发邮件通知你。</span>
+      <span class="t t-ko">조건이 맞는 다음 수확 기회 3~5일 전에 이메일로 알려드립니다.</span>
+      <span class="t t-ja">条件が揃った次の収穫チャンスの3〜5日前にメールでお知らせします。</span>
+      <span class="t t-vi">Chúng tôi sẽ email bạn 3–5 ngày trước cửa sổ thu hoạch phù hợp.</span>
+    </p>
+    <button class="modal-close" onclick="closeModal()">
+      <span class="t t-en">Got it</span><span class="t t-zh">好的，知道了</span>
+      <span class="t t-ko">확인</span><span class="t t-ja">了解</span><span class="t t-vi">Đã hiểu</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+// Species: beaches = which locations have this species
+// Wolfe:  oyster, manila, littleneck, butter, horse, geoduck
+// Twin:   razor ONLY
+// Luhr:   oyster, manila, horse, shrimp
+// Bremerton / Edmonds / Pier62: crab (dungeness+redrock), squid
+const ALL_SPECIES = [
+  { id:'razor',      emoji:'🪄', en:'Razor Clam',       zh:'刀蛤',     ko:'면도날 조개', ja:'レーザーガイ',       vi:'Ngao Dao',   beaches:['twin'] },
+  { id:'oyster',     emoji:'🦪', en:'Pacific Oyster',   zh:'生蚝',     ko:'굴',          ja:'マガキ',            vi:'Hàu Pacific',beaches:['wolfe','luhr'] },
+  { id:'manila',     emoji:'🐚', en:'Manila Clam',      zh:'马尼拉贝', ko:'마닐라 조개', ja:'マニラガイ',         vi:'Ngao Manila',beaches:['wolfe','luhr'] },
+  { id:'cockle',     emoji:'🐚', en:'Cockle',           zh:'鸟贝',     ko:'새조개',       ja:'コックル',          vi:'Sò Tim',     beaches:['wolfe','kvi'] },
+  { id:'butter',     emoji:'🐚', en:'Butter Clam',      zh:'黄油哈',   ko:'버터 조개',   ja:'バタークラム',       vi:'Ngao Bơ',    beaches:['wolfe','kvi'] },
+  { id:'horse',      emoji:'🐚', en:'Horse Clam',       zh:'马蚌',     ko:'말 조개',     ja:'ホースクラム',       vi:'Ngao Ngựa',  beaches:['wolfe','luhr','kvi'] },
+  { id:'shrimp',     emoji:'🦐', en:'Sand Shrimp',      zh:'沙虾',     ko:'모래 새우', ja:'サンドシュリンプ', vi:'Tôm Cát',   beaches:['luhr'] },
+  { id:'geoduck',    emoji:'🐚', en:'Geoduck',          zh:'象拔蚌',   ko:'대합',        ja:'ミルクイ',          vi:'Hải Sâm',   beaches:['wolfe','kvi'] },
+  { id:'crayfish',   emoji:'🦞', en:'Crayfish',         zh:'小龙虾',   ko:'가재',        ja:'ザリガニ',          vi:'Tôm Đồng',  beaches:['rattlesnake'] },
+  { id:'dungeness',  emoji:'🦀', en:'Dungeness Crab',   zh:'邓杰内斯蟹',ko:'던지니스 게', ja:'ダンジネスカニ',    vi:'Cua Dungeness',beaches:['bremerton','edmonds','pier62'] },
+  { id:'redrock',    emoji:'🦀', en:'Red Rock Crab',    zh:'红石蟹',   ko:'레드록 크랩', ja:'レッドロックカニ',  vi:'Cua Red Rock',beaches:['bremerton','edmonds','pier62'] },
+  { id:'squid',      emoji:'🦑', en:'Squid',            zh:'鱿鱼',     ko:'오징어',      ja:'イカ',              vi:'Mực',        beaches:['bremerton','edmonds','pier62'] },
+];
+
+// Locations
+const LOCATIONS = [
+  {
+    id:'wolfe', name:'Wolfe Property State Park',
+    sub:{ en:'Hood Canal · Oysters & Clams', zh:'Hood Canal · 生蚝/贝类', ko:'후드 커낼', ja:'フッド・カナル', vi:'Hood Canal' },
+    tides:[
+      { v:'mid', en:'Medium +1.0 to +3.0 ft (recommended — no extreme low needed)', zh:'中低潮 +1.0 到 +3.0 ft（推荐）', ko:'중저조 +1.0~+3.0ft (권장)', ja:'中干潮 +1.0〜+3.0ft (推奨)', vi:'Vừa +1.0 đến +3.0ft (khuyến nghị)' },
+      { v:'low', en:'Low 0 to +1.0 ft (also fine, more exposure)', zh:'低潮 0 到 +1.0 ft（也可以）', ko:'저조 0~+1.0ft', ja:'干潮 0〜+1.0ft', vi:'Thấp 0 đến +1.0ft' },
+      { v:'neg', en:'Very Low < -1.0 ft (unnecessary but acceptable)', zh:'极低潮 < -1.0 ft（不必要，但可以）', ko:'극저조 < -1.0ft', ja:'極干潮 < -1.0ft', vi:'Rất thấp < -1.0ft' },
+    ],
+    tideNote:{ en:'✦ Wolfe advantage: +2 to +3 ft is enough to expose habitat — no extreme low needed.', zh:'✦ Wolfe特殊优势：+2~+3 ft就够暴露贝类栖息地，不用等极低潮。', ko:'✦ Wolfe 특징: +2~+3ft면 서식지 노출 충분 — 극저조 불필요.', ja:'✦ Wolfeの利点: +2〜+3ftで生息地を十分露出。極干潮不要。', vi:'✦ Ưu điểm Wolfe: +2~+3ft là đủ để lộ bãi — không cần triều cực thấp.' }
+  },
+  {
+    id:'twin', name:'Twin Harbors Beach',
+    sub:{ en:'Pacific Coast · Razor Clams Only', zh:'太平洋海岸 · 刀蛤专区', ko:'태평양 해안 · 면도날 조개만', ja:'太平洋沿岸 · レーザーガイのみ', vi:'Bờ Thái Bình Dương · Chỉ ngao dao' },
+    tides:[
+      { v:'neg', en:'Very Low < -1.0 ft (best results)', zh:'极低潮 < -1.0 ft（最佳）', ko:'극저조 < -1.0ft (최적)', ja:'極干潮 < -1.0ft (最良)', vi:'Rất thấp < -1.0ft (tốt nhất)' },
+      { v:'low', en:'Low -1.0 to 0 ft (good)', zh:'低潮 -1.0 到 0 ft（良好）', ko:'저조 -1.0~0ft (좋음)', ja:'干潮 -1.0〜0ft (良好)', vi:'Thấp -1.0 đến 0ft (tốt)' },
+      { v:'any', en:'Any WDFW-announced dig day low tide', zh:'WDFW公布的任意挖蛤日低潮', ko:'WDFW 공지 날짜 간조', ja:'WDFW公表の掘り日の干潮', vi:'Bất kỳ triều thấp ngày WDFW thông báo' },
+    ],
+    tideNote:{ en:'✦ Razor clams only. WDFW announces specific dig days ~1 week in advance. Lower is better.', zh:'✦ 只挖刀蛤。WDFW提前约1周公布挖蛤日，越低越好。', ko:'✦ 면도날 조개만. WDFW 약 1주 전 날짜 공지. 낮을수록 좋음.', ja:'✦ レーザーガイのみ。約1週間前にWDFWが日程公表。低いほど良い。', vi:'✦ Chỉ ngao dao. WDFW thông báo ~1 tuần trước. Càng thấp càng tốt.' }
+  },
+  {
+    id:'luhr', name:'Luhr Beach Boat Launch',
+    sub:{ en:'Nisqually Delta · Oysters & Shrimp', zh:'Nisqually Delta · 生蚝/沙虾', ko:'니스콸리 델타 · 굴/새우', ja:'ニスクアリー・デルタ · 牡蠣/エビ', vi:'Nisqually Delta · Hàu/Tôm' },
+    tides:[
+      { v:'low', en:'Low 0 to +1.0 ft (best for clams & oysters)', zh:'低潮 0 到 +1.0 ft（贝类/生蚝最佳）', ko:'저조 0~+1.0ft (조개/굴 최적)', ja:'干潮 0〜+1.0ft (貝類/牡蠣最適)', vi:'Thấp 0 đến +1.0ft (tốt nhất cho ngao/hàu)' },
+      { v:'neg', en:'Very Low < -1.0 ft (also great for shrimp)', zh:'极低潮 < -1.0 ft（沙虾推荐）', ko:'극저조 < -1.0ft (새우 추천)', ja:'極干潮 < -1.0ft (エビにも最適)', vi:'Rất thấp < -1.0ft (tốt cho tôm)' },
+      { v:'mid', en:'Medium +1.0 to +2.0 ft (oysters accessible)', zh:'中低潮 +1.0 到 +2.0 ft（生蚝可以）', ko:'중저조 +1.0~+2.0ft (굴 가능)', ja:'中干潮 +1.0〜+2.0ft (牡蠣可能)', vi:'Vừa +1.0 đến +2.0ft (hàu tiếp cận được)' },
+    ],
+    tideNote:{ en:'✦ Nisqually tidal flats extend far. Below +1.0 ft gives best shellfish habitat access.', zh:'✦ Nisqually泥滩广阔，+1.0 ft以下贝类栖息地暴露最充分。', ko:'✦ 니스콸리 갯벌 광활. +1.0ft 이하에서 패류 서식지 최적 노출.', ja:'✦ ニスクアリー干潟は広大。+1.0ft以下が最適。', vi:'✦ Bãi triều Nisqually rộng. Dưới +1.0ft tốt nhất.' }
+  },
+  {
+    id:'bremerton', name:'Bremerton Marina',
+    sub:{ en:'Marine Area 10 · Kitsap County · Crab & Squid', zh:'Marine Area 10 · Kitsap County · 螃蟹/鱿鱼', ko:'마린 에어리어 10 · 기트샙 카운티', ja:'マリンエリア10 · キットサップ郡', vi:'Marine Area 10 · Kitsap County' },
+    tides:[
+      { v:'any', en:'Any tide (crab pots work at all depths; squid best near high tide after dark)', zh:'任意潮汐（螃蟹笼适合各水深；鱿鱼夜间高潮附近最佳）', ko:'모든 조수 (통발은 깊이 무관; 오징어는 야간 고조 근처 최적)', ja:'任意の潮位（カニポットは深さ不問; イカは夜間高潮付近が最適）', vi:'Triều bất kỳ (lồng cua mọi độ sâu; mực tốt nhất gần triều cao ban đêm)' },
+      { v:'low', en:'Low tide (easier shore crabbing by ring net)', zh:'低潮（岸边环网捕蟹更方便）', ko:'저조 (링 넷 게잡이 편리)', ja:'干潮 (リングネットでの岸カニ釣りが容易)', vi:'Triều thấp (câu cua bằng vòng lưới dễ hơn)' },
+    ],
+    tideNote:{ en:'✦ Crab pots can be set from boat or pier. Squid jig at night under lights. Avoid gear near ferry lanes.', zh:'✦ 螃蟹笼可从船或码头放置。夜间在灯光下钓鱿鱼。避免在渡轮航线附近放笼。', ko:'✦ 게 통발은 보트나 부두에서 설치. 야간 조명 아래 오징어 지깅. 페리 항로 주변 장비 피하기.', ja:'✦ カニポットは船や桟橋から設置可能。夜間照明下でイカジグ。フェリー航路付近は避ける。', vi:'✦ Lồng cua đặt từ thuyền hoặc cầu tàu. Câu mực ban đêm dưới đèn. Tránh đặt bẫy gần đường phà.' }
+  },
+  {
+    id:'edmonds', name:'Edmonds Public Fishing Pier',
+    sub:{ en:'Marine Area 8-2 · Snohomish County · Squid prime', zh:'Marine Area 8-2 · Snohomish County · 鱿鱼首选', ko:'마린 에어리어 8-2 · 스노호미시 카운티', ja:'マリンエリア8-2 · スノホミッシュ郡', vi:'Marine Area 8-2 · Snohomish County' },
+    tides:[
+      { v:'any', en:'Any tide (squid best 1–2 hrs around high tide after dark)', zh:'任意潮汐（鱿鱼日落后高潮前后1–2小时最佳）', ko:'모든 조수 (오징어는 야간 고조 전후 1~2시간 최적)', ja:'任意の潮位（イカは日没後の高潮前後1〜2時間が最適）', vi:'Triều bất kỳ (mực tốt nhất 1–2 giờ quanh triều cao sau khi tối)' },
+      { v:'high', en:'High tide after sunset — best for squid jigging', zh:'日落后高潮——钓鱿鱼最佳时机', ko:'일몰 후 고조 — 오징어 지깅 최적', ja:'日没後の高潮 — イカジギング最適', vi:'Triều cao sau hoàng hôn — tốt nhất cho câu mực' },
+    ],
+    tideNote:{ en:'✦ Edmonds pier is one of the first spots squid arrive each fall (around September). Night fishing under lights is key.', zh:'✦ Edmonds码头是鱿鱼每年最早到达的地点之一（约9月）。夜间灯光下钓鱼是关键。', ko:'✦ Edmonds 부두는 오징어가 매년 가장 먼저 도착하는 곳 중 하나(9월경). 야간 조명 아래 낚시가 핵심.', ja:'✦ Edmonds桟橋はイカが毎年最初に回遊する場所の一つ(約9月)。夜間照明下の釣りが鍵。', vi:'✦ Cầu tàu Edmonds là một trong những nơi mực đến sớm nhất mỗi mùa thu (khoảng tháng 9). Câu ban đêm dưới đèn là chìa khóa.' }
+  },
+  {
+    id:'pier62', name:'Seattle Pier 62',
+    sub:{ en:'Marine Area 10 · King County · Elliott Bay', zh:'Marine Area 10 · King County · Elliott Bay', ko:'마린 에어리어 10 · 킹 카운티 · 엘리엇 베이', ja:'マリンエリア10 · キング郡 · エリオットベイ', vi:'Marine Area 10 · King County · Elliott Bay' },
+    tides:[
+      { v:'any', en:'Any tide (crab pots; squid best at night near high tide Oct–Jan)', zh:'任意潮汐（螃蟹笼；鱿鱼10–1月夜间高潮附近最佳）', ko:'모든 조수 (통발; 오징어 10~1월 야간 고조 근처 최적)', ja:'任意の潮位（カニポット; イカ10〜1月夜間高潮付近が最適）', vi:'Triều bất kỳ (lồng cua; mực tốt nhất đêm gần triều cao tháng 10–1)' },
+    ],
+    tideNote:{ en:'✦ Note: Waters 100 yds from Elliott Bay Fishing Pier are closed to shellfish except when fishing from the pier. Check East Elliott Bay closure zones.', zh:'✦ 注意：Elliott Bay钓鱼码头100码内禁止采贝，但从码头作钓除外。查看East Elliott Bay关闭区域。', ko:'✦ 참고: Elliott Bay 낚시 부두 100야드 이내는 부두 낚시 시에만 패류 채취 가능. East Elliott Bay 금지 구역 확인.', ja:'✦ 注意: エリオットベイ桟橋100ヤード以内は桟橋からの釣りのみ貝類採取可能。East Elliott Bay閉鎖区域を確認。', vi:'✦ Lưu ý: Trong 100 yards quanh cầu tàu Elliott Bay chỉ thu hoạch khi câu từ cầu. Kiểm tra khu vực đóng cửa East Elliott Bay.' }
+  },
+  {
+    id:'rattlesnake', name:'Rattlesnake Lake',
+    sub:{ en:'King County · SE of North Bend · Freshwater', zh:'King County · North Bend东南 · 淡水湖', ko:'킹 카운티 · 노스 벤드 남동쪽 · 민물', ja:'キング郡 · ノースベンド南東 · 淡水', vi:'King County · Đông Nam North Bend · Nước ngọt' },
+    tides:[
+      { v:'any', en:'Any water level — freshwater lake, not tide-dependent. Best in warm months May–Oct.', zh:'任何水位——淡水湖，无潮汐影响。5–10月温暖季节最佳。', ko:'모든 수위 — 민물 호수, 조수 무관. 5~10월 따뜻한 계절 최적.', ja:'水位不問 — 淡水湖のため潮位は関係なし。5〜10月の温暖期が最適。', vi:'Mực nước bất kỳ — hồ nước ngọt, không phụ thuộc thủy triều. Tốt nhất tháng 5–10.' },
+    ],
+    tideNote:{ en:'✦ Freshwater lake — no tide requirement. Crayfish are most active in summer. Traps work at most depths. Verify open status with WDFW before visiting.', zh:'✦ 淡水湖，无潮汐要求。小龙虾夏季最活跃。笼具在各水深均可使用。出发前向WDFW核实是否开放。', ko:'✦ 민물 호수 — 조수 조건 없음. 가재는 여름에 가장 활발. 대부분의 깊이에서 통발 사용 가능. 방문 전 WDFW에 개방 여부 확인.', ja:'✦ 淡水湖 — 潮位条件なし。ザリガニは夏に最も活発。ほとんどの深さでポット使用可能。訪問前にWDFWで開放状況を確認。', vi:'✦ Hồ nước ngọt — không cần điều kiện triều. Tôm đồng hoạt động nhiều nhất vào mùa hè. Lồng bẫy hoạt động ở hầu hết độ sâu. Xác nhận tình trạng mở cửa với WDFW trước khi đến.' }
+  },
+  // Add more locations here
+  {
+    id:'kvi', name:'Kvi Beach',
+    sub:{ en:'Puget Sound · Kitsap County · Geoduck & Shellfish', zh:'Puget Sound · Kitsap County · 象拔蚌/贝类', ko:'퓨젯 사운드 · 키트샙 카운티', ja:'ピュジェットサウンド · キットサップ郡', vi:'Puget Sound · Kitsap County' },
+    tides:[
+      { v:'neg', en:'Very Low < -1.0 ft (best for Geoduck)', zh:'极低潮 < -1.0 ft（象拔蚌最佳）', ko:'극저조 < -1.0ft (대합 최적)', ja:'極干潮 < -1.0ft (ミルクイ最適)', vi:'Rất thấp < -1.0ft (tốt nhất cho Geoduck)' },
+      { v:'low', en:'Low 0 to +1.0 ft (good for Cockle, Butter & Horse Clam)', zh:'低潮 0 到 +1.0 ft（鸟贝/黄油哈/马蚌）', ko:'저조 0~+1.0ft (새조개/버터/말조개)', ja:'干潮 0〜+1.0ft (コックル/バター/ホース)', vi:'Thấp 0 đến +1.0ft (Cockle/Butter/Horse)' },
+      { v:'mid', en:'Medium +1.0 to +2.0 ft (Cockle accessible)', zh:'中低潮 +1.0 到 +2.0 ft（鸟贝可及）', ko:'중저조 +1.0~+2.0ft (새조개 가능)', ja:'中干潮 +1.0〜+2.0ft (コックル可能)', vi:'Vừa +1.0 đến +2.0ft (Cockle tiếp cận được)' },
+    ],
+    tideNote:{ en:'✦ Kvi Beach hosts Geoduck, Cockle, Butter Clam, and Horse Clam. Geoduck requires very low tides. Check DOH Shellfish Safety Map before every visit.', zh:'✦ Kvi Beach有象拔蚌、鸟贝、黄油哈和马蚌。象拔蚌需要极低潮。每次出发前查DOH贝类安全地图。', ko:'✦ Kvi Beach에는 대합, 새조개, 버터조개, 말조개가 있습니다. 대합은 극저조 필요. 방문 전 반드시 DOH 안전 지도 확인.', ja:'✦ Kvi BeachにはミルクイGeoduck・コックル・バタークラム・ホースクラムがいます。ミルクイは極干潮必要。訪問前DOH安全マップ確認必須。', vi:'✦ Kvi Beach có Geoduck, Cockle, Butter Clam và Horse Clam. Geoduck cần triều rất thấp. Kiểm tra DOH trước mỗi lần đi.' }
+  },
+];
+
+const DAYS = [
+  { v:'mon', en:'Mon', zh:'周一', ko:'월', ja:'月', vi:'T2' },
+  { v:'tue', en:'Tue', zh:'周二', ko:'화', ja:'火', vi:'T3' },
+  { v:'wed', en:'Wed', zh:'周三', ko:'수', ja:'水', vi:'T4' },
+  { v:'thu', en:'Thu', zh:'周四', ko:'목', ja:'木', vi:'T5' },
+  { v:'fri', en:'Fri', zh:'周五', ko:'금', ja:'金', vi:'T6' },
+  { v:'sat', en:'Sat', zh:'周六', ko:'토', ja:'土', vi:'T7' },
+  { v:'sun', en:'Sun', zh:'周日', ko:'일', ja:'日', vi:'CN' },
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentLang  = 'en';
+let selectedSp   = new Set();
+let selectedLocs = new Set();   // multi-select locations
+let selectedDays = new Set();
+
+// ═══════════════════════════════════════════
+// LANGUAGE
+// ═══════════════════════════════════════════
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.setAttribute('data-lang', lang);
+  document.documentElement.setAttribute('lang', lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : lang === 'ko' ? 'ko' : lang === 'vi' ? 'vi' : 'en');
+  const labels = { en:'EN', zh:'中文', ko:'한국어', ja:'日本語', vi:'Tiếng Việt' };
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.classList.toggle('active', b.textContent.trim() === labels[lang]));
+  // show/hide dev note (only in Chinese)
+  const dn = document.getElementById('dev-note-zh');
+  if (dn) dn.style.display = lang === 'zh' ? 'flex' : 'none';
+  renderSpeciesChips();
+  renderLocationSelect();
+  renderDayChips();
+  updateTideOptions();
+  renderSuggestTypeSelect();
+}
+
+// ═══════════════════════════════════════════
+// ① SPECIES
+// ═══════════════════════════════════════════
+function renderSpeciesChips() {
+  const grid = document.getElementById('species-grid');
+  grid.innerHTML = '';
+  ALL_SPECIES.forEach(sp => {
+    const isSel = selectedSp.has(sp.id);
+    const el = document.createElement('label');
+    el.className = 'sp-chip' + (isSel ? ' sp-sel' : '');
+    el.dataset.id = sp.id;
+    el.innerHTML = `<input type="checkbox" value="${sp.id}">${sp.emoji} ${sp[currentLang] || sp.en}`;
+    el.addEventListener('click', e => { e.preventDefault(); toggleSpecies(sp.id, el); });
+    grid.appendChild(el);
+  });
+}
+
+function toggleSpecies(id, el) {
+  if (selectedSp.has(id)) { selectedSp.delete(id); el.classList.remove('sp-sel'); }
+  else                     { selectedSp.add(id);    el.classList.add('sp-sel');   }
+  clearErr('err-species');
+  // reset downstream
+  selectedLocs.clear();
+  selectedDays.clear();
+  document.getElementById('sel-tide').value = '';
+  document.getElementById('sel-tide').classList.remove('selected');
+  document.getElementById('tide-note').textContent = '';
+  renderLocationSelect();
+  renderDayChips();
+  updateStepLocks();
+}
+
+// ═══════════════════════════════════════════
+// BEACH CARD ACCORDION
+// ═══════════════════════════════════════════
+function toggleCard(id) {
+  const card = document.getElementById(id);
+  if (card) card.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// ② LOCATION (multi-select chips)
+// ═══════════════════════════════════════════
+function renderLocationSelect() {
+  const grid = document.getElementById('location-grid');
+  grid.innerHTML = '';
+  const selArr = [...selectedSp];
+
+  LOCATIONS.forEach(loc => {
+    const locSp = ALL_SPECIES.filter(s => s.beaches.includes(loc.id)).map(s => s.id);
+    const hasAny = selArr.length === 0 || selArr.some(s => locSp.includes(s));
+    const isSel  = selectedLocs.has(loc.id);
+
+    const el = document.createElement('label');
+    el.className = 'loc-chip' + (isSel ? ' loc-sel' : '') + (!hasAny ? ' loc-dis' : '');
+    el.dataset.id = loc.id;
+
+    // Show which selected species aren't here
+    let warnText = '';
+    if (hasAny && selArr.length > 0) {
+      const missing = selArr.filter(s => !locSp.includes(s))
+        .map(s => { const x = ALL_SPECIES.find(a => a.id === s); return x ? x.emoji : ''; })
+        .filter(Boolean);
+      if (missing.length) warnText = ' ⚠' + missing.join('');
+    }
+
+    el.innerHTML = `<input type="checkbox" value="${loc.id}" style="display:none">${loc.name}${warnText}`;
+
+    if (hasAny) el.addEventListener('click', e => {
+      e.preventDefault();
+      if (selectedLocs.has(loc.id)) {
+        selectedLocs.delete(loc.id);
+        el.classList.remove('loc-sel');
+      } else {
+        selectedLocs.add(loc.id);
+        el.classList.add('loc-sel');
+      }
+      clearErr('err-location');
+      updateTideOptions();
+      updateStepLocks();
+    });
+    grid.appendChild(el);
+  });
+  document.getElementById('step-location').classList.toggle('unlocked', selectedSp.size > 0);
+}
+
+// ═══════════════════════════════════════════
+// ③ TIDE (global preference)
+// ═══════════════════════════════════════════
+const GLOBAL_TIDES = [
+  { v:'any', en:'Any tide — alert me whenever season & day match',       zh:'任意潮汐 — 只要季节和日期符合就提醒',        ko:'모든 조수 — 시즌과 날짜만 맞으면 알림',      ja:'任意の潮位 — シーズンと曜日が合えば通知',        vi:'Triều bất kỳ — chỉ cần mùa và ngày phù hợp' },
+  { v:'low',  en:'Low tide (0 to -1 ft) — good for digging clams',       zh:'低潮（0 到 -1 ft）— 适合挖蛤蜊',            ko:'저조 (0~-1ft) — 조개 채취에 좋음',           ja:'干潮(0〜-1ft) — 貝掘りに最適',                  vi:'Triều thấp (0 đến -1ft) — tốt cho đào ngao' },
+  { v:'neg',  en:'Very low tide (< -1 ft) — best for geoduck & razor',   zh:'极低潮（< -1 ft）— 象拔蚌/刀蛤最佳',         ko:'극저조 (< -1ft) — 대합/면도날 조개 최적',    ja:'極干潮(< -1ft) — ミルクイ・レーザーガイに最適',  vi:'Triều rất thấp (< -1ft) — tốt nhất cho geoduck' },
+  { v:'mid',  en:'Medium tide (+1 to +3 ft) — oysters & surface clams',  zh:'中低潮（+1 到 +3 ft）— 适合生蚝和表层蛤蜊',  ko:'중간 조수 (+1~+3ft) — 굴과 표층 조개',       ja:'中干潮(+1〜+3ft) — 牡蠣・表層の貝',             vi:'Triều vừa (+1~+3ft) — hàu và ngao bề mặt' },
+];
+
+function updateTideOptions() {
+  const sel  = document.getElementById('sel-tide');
+  const note = document.getElementById('tide-note');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = { en:'— Select tide preference —', zh:'— 请选择潮汐偏好 —', ko:'— 조수 선호 선택 —', ja:'— 潮位の好みを選択 —', vi:'— Chọn sở thích triều —' }[currentLang] || '— Select tide preference —';
+  sel.appendChild(blank);
+
+  if (selectedLocs.size === 0) {
+    document.getElementById('step-tide').classList.remove('unlocked');
+    note.textContent = '';
+    return;
+  }
+
+  GLOBAL_TIDES.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.v;
+    o.textContent = t[currentLang] || t.en;
+    if (t.v === prev) o.selected = true;
+    sel.appendChild(o);
+  });
+
+  note.textContent = { en:'✦ TideHarvest will alert you when NOAA predicts this tide level on your chosen days at your selected locations.',
+    zh:'✦ 当NOAA预测你选择的地点在你的出行日出现此潮汐水平时，TideHarvest会提前提醒。',
+    ko:'✦ 선택한 장소에서 선택한 날 NOAA가 이 조수 수준을 예측하면 알림을 보내드립니다.',
+    ja:'✦ 選択した場所・曜日にNOAAがこの潮位を予測した際に通知します。',
+    vi:'✦ TideHarvest sẽ thông báo khi NOAA dự báo mức triều này vào ngày bạn chọn tại địa điểm đã chọn.' }[currentLang];
+
+  if (prev) { sel.value = prev; sel.classList.add('selected'); }
+  document.getElementById('step-tide').classList.add('unlocked');
+  clearErr('err-tide');
+}
+
+function onTideChange() {
+  const sel = document.getElementById('sel-tide');
+  sel.classList.toggle('selected', !!sel.value);
+  sel.classList.remove('invalid');
+  clearErr('err-tide');
+  updateStepLocks();
+}
+
+// ═══════════════════════════════════════════
+// ④ DAYS
+// ═══════════════════════════════════════════
+function renderDayChips() {
+  const grid = document.getElementById('day-grid');
+  grid.innerHTML = '';
+  DAYS.forEach(d => {
+    const isSel = selectedDays.has(d.v);
+    const el = document.createElement('label');
+    el.className = 'day-chip' + (isSel ? ' day-sel' : '');
+    el.dataset.v = d.v;
+    el.innerHTML = `<input type="checkbox" value="${d.v}">${d[currentLang] || d.en}`;
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      if (selectedDays.has(d.v)) { selectedDays.delete(d.v); el.classList.remove('day-sel'); }
+      else                        { selectedDays.add(d.v);    el.classList.add('day-sel');    }
+      clearErr('err-days');
+    });
+    grid.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════
+// LOCKS
+// ═══════════════════════════════════════════
+function updateStepLocks() {
+  document.getElementById('step-location').classList.toggle('unlocked', selectedSp.size > 0);
+  document.getElementById('step-tide').classList.toggle('unlocked', selectedLocs.size > 0);
+  const tv = document.getElementById('sel-tide').value;
+  document.getElementById('step-days').classList.toggle('unlocked', selectedLocs.size > 0 && !!tv);
+}
+
+// ═══════════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════════
+function handleSubmit(e) {
+  e.preventDefault();
+  let ok = true;
+  if (selectedSp.size === 0)   { showErr('err-species');  ok = false; }
+  if (selectedLocs.size === 0) { showErr('err-location'); ok = false; }
+  const tv = document.getElementById('sel-tide').value;
+  if (!tv) { document.getElementById('sel-tide').classList.add('invalid'); showErr('err-tide'); ok = false; }
+  if (selectedDays.size === 0) { showErr('err-days');     ok = false; }
+  const email = document.getElementById('inp-email').value;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('inp-email').classList.add('invalid'); showErr('err-email'); ok = false;
+  }
+  if (!ok) {
+    document.querySelector('.field-error.show')?.closest('.form-step')?.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+  // ── Google Forms submission ──────────────────────────────────────────
+  const GFORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScJhGS2HKtPm6NkU4jec2lXqGws_sIE_D-FQMjTEcz4jaAP1g/formResponse';
+  const params = new URLSearchParams({
+    'entry.1095928412': [...selectedSp].join(','),
+    'entry.1443541680': [...selectedLocs].join(','),
+    'entry.1464673578': tv,
+    'entry.1560174952': [...selectedDays].join(','),
+    'entry.1000809807': email,
+  });
+  fetch(GFORM_URL + '?' + params.toString(), { method:'POST', mode:'no-cors' })
+    .catch(() => {}); // no-cors always resolves, error is silent
+  console.log('✓ submitted', { species:[...selectedSp], locations:[...selectedLocs], tide:tv, days:[...selectedDays], email });
+  document.getElementById('modal').classList.add('open');
+  resetForm();
+}
+
+function resetForm() {
+  selectedSp.clear(); selectedLocs.clear(); selectedDays.clear();
+  document.getElementById('sel-tide').value = '';
+  document.getElementById('sel-tide').classList.remove('selected','invalid');
+  document.getElementById('tide-note').textContent = '';
+  document.getElementById('inp-email').value = '';
+  document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+  renderSpeciesChips(); renderLocationSelect(); renderDayChips();
+  updateTideOptions(); updateStepLocks();
+}
+
+function showErr(id)  { document.getElementById(id).classList.add('show'); }
+function clearErr(id) { document.getElementById(id).classList.remove('show'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('inp-email').addEventListener('input', () => { document.getElementById('inp-email').classList.remove('invalid'); clearErr('err-email'); });
+document.getElementById('sel-tide').addEventListener('change', () => { document.getElementById('sel-tide').classList.remove('invalid'); clearErr('err-tide'); updateStepLocks(); });
+
+// ═══════════════════════════════════════════
+// SUGGEST TYPE SELECT (i18n)
+// ═══════════════════════════════════════════
+const SUGGEST_TYPES = {
+  species:    { en:'New Species',            zh:'新物种',         ko:'새 어종',          ja:'新しい種類',        vi:'Loài mới' },
+  location:   { en:'New Location',           zh:'新地点',         ko:'새 장소',          ja:'新しい場所',        vi:'Địa điểm mới' },
+  both:       { en:'Both Species + Location',zh:'物种 + 地点',    ko:'어종 + 장소',      ja:'種類 + 場所',       vi:'Loài + Địa điểm' },
+  correction: { en:'Correction to existing', zh:'更正现有信息',   ko:'기존 정보 수정',   ja:'既存情報の訂正',    vi:'Sửa thông tin cũ' },
+};
+function renderSuggestTypeSelect() {
+  const sel = document.getElementById('sug-type');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '';
+  Object.entries(SUGGEST_TYPES).forEach(([v, labels]) => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = labels[currentLang] || labels.en;
+    if (v === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+// ═══════════════════════════════════════════
+// SUGGEST FORM
+// ═══════════════════════════════════════════
+function handleSuggestSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('sug-name').value.trim();
+  const details = document.getElementById('sug-details').value.trim();
+  if (!name || !details) {
+    alert('Please fill in the name and details fields.');
+    return;
+  }
+  // ── Google Forms submission ──────────────────────────────────────────
+  const GFORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSd6na-0gDs0cPen9nLqRC7v-r0ql9hNJFiUcwg3V2NWqNmyxA/formResponse';
+  const params = new URLSearchParams({
+    'entry.2062011947': document.getElementById('sug-type').value,
+    'entry.1428144193': name,
+    'entry.554546828':  details,
+    'entry.659729817':  document.getElementById('sug-email').value,
+  });
+  fetch(GFORM_URL + '?' + params.toString(), { method:'POST', mode:'no-cors' });
+  document.getElementById('sug-success').classList.add('show');
+  document.getElementById('suggestForm').reset();
+}
+
+// ═══════════════════════════════════════════
+// INIT — default to English
+// ═══════════════════════════════════════════
+setLang('en');
+renderDayChips();
+renderSuggestTypeSelect();
+</script>
+</body>
+</html>
